@@ -1,0 +1,55 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+env/
+*.env
+
+# Django
+*.log
+*.pot
+*.mo
+media/
+staticfiles/
+
+# extra stuff
+daily_data_csv/
+*.csv
+rozne/
+# IDEs and editors
+.vscode/
+.idea/
+*.iml
+
+# OS and temp files
+.DS_Store
+Thumbs.db
+*.swp
+
+# Virtual environment
+venv/
+env/
+bin/
+lib/
+include/
+
+# SQLite database file
+db.sqlite3
+
+# Migrations (optional - keep if you want them tracked)
+# migrations/
+
+# Test coverage
+.coverage
+htmlcov/
+
+# Node.js
+node_modules/
+package-lock.json
+npm-debug.log
+
+# Other
+*.sqlite
+*.db
