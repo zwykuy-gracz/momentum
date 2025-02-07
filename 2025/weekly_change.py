@@ -4,13 +4,22 @@ from sqlalchemy import Float, Date, Boolean, union_all
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 import pandas as pd
+import logging
 from dotenv import load_dotenv
 
 load_dotenv()
 
+logging.basicConfig(
+    filename="../watchdog_daily_routine.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+
+logging.info(f"Starting weekly change populating")
+
 Base = declarative_base()
 
-print("Starting weekly changes")
+print("Starting best/worst weekly DB populating")
 
 
 class ListOfTickers(Base):
@@ -149,6 +158,8 @@ for _, row in weekly_worst20.iterrows():
 session.commit()
 
 session.close()
+
+logging.info(f"Finished best/worst weekly DB populating")
 
 import time
 import runpy

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import yfinance as yf
+import logging
 from datetime import date, timedelta
 from sqlalchemy import (
     create_engine,
@@ -19,6 +20,13 @@ import os
 import time
 from dotenv import load_dotenv
 
+
+logging.basicConfig(
+    filename="../watchdog_daily_routine.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+
 load_dotenv()
 
 
@@ -31,18 +39,6 @@ Read DF from CSV and populate DB read_df_from_csv_and_populate_db(date)
 Count and populate DB with YTD returns counting_and_populating_ytd_return(tickers, date)
 Create Top20 YTD creating_df_best_ytd(last_date)
 """
-
-
-# creates list of tickers from a file
-# TODO probably to be removed
-def create_lst_of_tickers(filename):
-    tickers = []
-    with open(filename, "r+") as f:
-        lines = f.readlines()
-        for line in lines:
-            item = line[:-1]
-            tickers.append(item)
-    return tickers
 
 
 Base = declarative_base()
@@ -87,69 +83,68 @@ class ListOfTickers(Base):
         return f"<StockData(ticker='{self.ticker}')>"
 
 
-engine = create_engine(os.getenv("DB_STOCK_DATA"))
-# engine = create_engine(os.getenv("DB_STOCK_DATA_BACKUP"))
-# Base.metadata.create_all(engine)
-
-Session = sessionmaker(bind=engine)
-session = Session()
-
-
 # downloads from YF and write DFs to files
 def download_tickers_from_yf(tickers, last_date):
-    half_length_of_tickers = len(tickers) // 2
-    # pd.options.display.float_format = "{:.2f}".format
-    df = yf.download(
-        tickers[:half_length_of_tickers], group_by="Ticker", start=last_date
-    )
-    df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
-    df = df.reset_index()
-    df.to_csv(f"daily_data_csv/{str(last_date).replace('-', '')}.csv", index=False)
+    try:
+        half_length_of_tickers = len(tickers) // 2
+        df = yf.download(
+            tickers[:half_length_of_tickers], group_by="Ticker", start=last_date
+        )
+        df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
+        df = df.reset_index()
+        df.to_csv(f"daily_data_csv/{str(last_date).replace('-', '')}.csv", index=False)
 
-    print("-------------------------------------")
-    print("One minute sleep during downloading from YF")
-    time.sleep(30)
-    print("30 more seconds")
-    time.sleep(30)
-    print("-------------------------------------")
+        print("-------------------------------------")
+        print("One minute sleep during downloading from YF")
+        time.sleep(30)
+        print("30 more seconds")
+        time.sleep(30)
+        print("-------------------------------------")
 
-    df = yf.download(
-        tickers[half_length_of_tickers:], group_by="Ticker", start=last_date
-    )
-    df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
-    df = df.reset_index()
-    df.to_csv(
-        f"daily_data_csv/{str(last_date).replace('-', '')}.csv",
-        mode="a",
-        index=False,
-        header=False,
-    )
-    print("YF tickers downloaded")
+        df = yf.download(
+            tickers[half_length_of_tickers:], group_by="Ticker", start=last_date
+        )
+        df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
+        df = df.reset_index()
+        df.to_csv(
+            f"daily_data_csv/{str(last_date).replace('-', '')}.csv",
+            mode="a",
+            index=False,
+            header=False,
+        )
+        print("YF tickers downloaded")
+        logging.info("YF API connection successful. Data downloaded.")
+    except Exception as e:
+        logging.error(f"YF API connection failed: {e}", exc_info=True)
 
 
 def read_df_from_csv_and_populate_db(last_date):
-    df = pd.read_csv(f"daily_data_csv/{str(last_date).replace('-', '')}.csv")
-    df["Date"] = pd.to_datetime(df["Date"]).dt.date
+    try:
+        df = pd.read_csv(f"daily_data_csv/{str(last_date).replace('-', '')}.csv")
+        df["Date"] = pd.to_datetime(df["Date"]).dt.date
 
-    for _, row in df.iterrows():
-        stock_price = StockData(
-            date=row["Date"],
-            close=row["Close"],
-            high=row["High"],
-            low=row["Low"],
-            open=row["Open"],
-            volume=row["Volume"],
-            ticker=row["Ticker"],
-        )
-        session.add(stock_price)
+        for _, row in df.iterrows():
+            stock_price = StockData(
+                date=row["Date"],
+                close=row["Close"],
+                high=row["High"],
+                low=row["Low"],
+                open=row["Open"],
+                volume=row["Volume"],
+                ticker=row["Ticker"],
+            )
+            session.add(stock_price)
 
-    session.commit()
-    print("DB Populated")
+        session.commit()
+        print("DB Populated")
+        logging.info("Database successfully populated.")
+    except Exception as e:
+        logging.error(f"Database population failed: {e}", exc_info=True)
 
 
 def daily_count_new_records(last_date):
     query_result = session.query(StockData).filter(StockData.date == last_date).all()
-    print(f"Number of new records in DB as of {last_date}: {len(query_result)}")
+    logging.info(f"Number of new records in DB as of {last_date}: {len(query_result)}")
 
 
 def counting_and_populating_ytd_0805_1105_return(tickers, last_date):
@@ -216,8 +211,9 @@ def counting_and_populating_ytd_0805_1105_return(tickers, last_date):
             )
 
             session.commit()
-        except AttributeError:
-            print("YTD bad ticker:", ticker)
+            logging.info("YTD, 0508, 0511 calculations completed successfully.")
+        except AttributeError as e:
+            logging.error(f"Error in YTD calculations: {e}", exc_info=True)
 
     print("ytd_0805_1105_return counted")
 
@@ -256,8 +252,12 @@ def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
                 {"ma200": indicators["SMA200"]}
             )
             session.commit()
-        except Exception:
-            print(f"bad ticker: {ticker}")
+
+            logging.info("Nasdaq SMAa populated successfully.")
+        except Exception as e:
+            logging.error(
+                f"Error in populating Nasdaq SMAs/Bad ticker {e}", exc_info=True
+            )
     print("Nasdaq SMAa populated")
 
 
@@ -295,8 +295,12 @@ def nyse_counting_and_populating_DB_with_SMAs(last_date):
                 {"ma200": indicators["SMA200"]}
             )
             session.commit()
-        except Exception:
-            print(f"bad ticker: {ticker}")
+
+            logging.info("Nyse SMAa populated successfully.")
+        except Exception as e:
+            logging.error(
+                f"Error in populating Nyse SMAs/Bad ticker {e}", exc_info=True
+            )
     print("Nyse SMAa populated")
 
 
@@ -355,36 +359,52 @@ def check_above_below_sma(tickers, last_date):
             )
 
             session.commit()
-        except:
-            print("Bad ticker:", ticker)
+
+            logging.info("Above/below SMAs counted.")
+        except Exception as e:
+            logging.error(
+                f"Error in counting above/below SMAs/Bad ticker {e}", exc_info=True
+            )
     print("Above/below SMAs counted")
 
 
 def main():
-    previous_day = date.today() - timedelta(days=1)
-    print(f"Working on date: {previous_day}")
-    list_of_tickers = [
-        t[0]
-        for t in session.query(ListOfTickers.ticker)
-        .filter(ListOfTickers.market_cap > 10_000_000_000)
-        .all()
-    ]
-    print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
-    download_tickers_from_yf(list_of_tickers, previous_day)
-    read_df_from_csv_and_populate_db(previous_day)
-    daily_count_new_records(previous_day)
-    counting_and_populating_ytd_0805_1105_return(list_of_tickers, previous_day)
+    try:
+        previous_day = date.today() - timedelta(days=1)
+        print(f"Working on date: {previous_day}")
+        logging.info(f"Working on date: {previous_day}")
+        list_of_tickers = [
+            t[0]
+            for t in session.query(ListOfTickers.ticker)
+            .filter(ListOfTickers.market_cap > 10_000_000_000)
+            .all()
+        ]
+        print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
+        download_tickers_from_yf(list_of_tickers, previous_day)
+        read_df_from_csv_and_populate_db(previous_day)
+        daily_count_new_records(previous_day)
+        counting_and_populating_ytd_0805_1105_return(list_of_tickers, previous_day)
 
-    nasdaq_counting_and_populating_DB_with_SMAs(previous_day)
-    # It takes about 173 sec
-    nyse_counting_and_populating_DB_with_SMAs(previous_day)
+        nasdaq_counting_and_populating_DB_with_SMAs(previous_day)
+        # It takes about 173 sec
+        nyse_counting_and_populating_DB_with_SMAs(previous_day)
 
-    check_above_below_sma(list_of_tickers, previous_day)
+        check_above_below_sma(list_of_tickers, previous_day)
+
+        logging.info("All steps completed successfully.")
+    except Exception as e:
+        logging.critical(f"Critical error in main process: {e}", exc_info=True)
 
 
-main()
+if __name__ == "__main__":
+    engine = create_engine(os.getenv("DB_STOCK_DATA"))
+    # Base.metadata.create_all(engine)
 
-session.close()
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    main()
+
+    session.close()
 
 import runpy
 

@@ -5,12 +5,21 @@ import logging
 import time
 from datetime import date, timedelta, datetime
 import pandas as pd
+import logging
 
 from telegram import Update
 from telegram.ext import ContextTypes, Application, CommandHandler
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logging.basicConfig(
+    filename="../watchdog_daily_routine.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+
+logging.info(f"Starting telegram bot")
 
 print("TG bot started")
 
@@ -145,23 +154,27 @@ async def start_msg(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def ytd_top20(context: ContextTypes.DEFAULT_TYPE):
-    query_result = (
-        session.query(
-            YTD20Best.date,
-            YTD20Best.ticker,
-            YTD20Best.pct_change,
+    try:
+        query_result = (
+            session.query(
+                YTD20Best.date,
+                YTD20Best.ticker,
+                YTD20Best.pct_change,
+            )
+            .filter(YTD20Best.date == previous_day)
+            .all()
         )
-        .filter(YTD20Best.date == previous_day)
-        .all()
-    )
-    ytd_best_msg = f"Best performing stocks YTD as of {previous_day}\n\n"
-    for q in query_result:
-        ytd_best_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
-    await context.bot.send_message(
-        chat_id=os.getenv("CJT_GROUP_ID"),
-        message_thread_id=os.getenv("TICKER_BOT_ROOM"),
-        text=ytd_best_msg,
-    )
+        ytd_best_msg = f"Best performing stocks YTD as of {previous_day}\n\n"
+        for q in query_result:
+            ytd_best_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
+        await context.bot.send_message(
+            chat_id=os.getenv("CJT_GROUP_ID"),
+            message_thread_id=os.getenv("TICKER_BOT_ROOM"),
+            text=ytd_best_msg,
+        )
+        logging.info("ytd_top20 successly sent")
+    except Exception as e:
+        logger.error("ytd_top20 Error: %s", e)
 
 
 async def ytd_bottom20(context: ContextTypes.DEFAULT_TYPE):
@@ -318,6 +331,7 @@ application = Application.builder().token(os.getenv("TG_TOKEN")).build()
 
 application.add_handler(CommandHandler("info", start))
 # job_queue.run_once(start_msg, 2)
+logging.info("starting job queue")
 job_queue = application.job_queue
 today = datetime.today().strftime("%A")
 if today == "Saturday":
@@ -329,5 +343,6 @@ job_queue.run_once(august05_top20, 13)
 job_queue.run_once(august05_bottom20, 17)
 job_queue.run_once(november05_top20, 20)
 job_queue.run_once(november05_bottom20, 23)
+logging.info("job queue ended")
 
 application.run_polling(allowed_updates=Update.ALL_TYPES)

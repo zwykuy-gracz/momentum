@@ -3,9 +3,18 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import date, timedelta, datetime
 import pandas as pd
 import os
+import logging
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logging.basicConfig(
+    filename="../watchdog_daily_routine.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+
+logging.info(f"Starting Best/worst YTD, 0508, 0511 DB populating")
 
 Base = declarative_base()
 
@@ -192,6 +201,9 @@ for _, row in november05_worst20.iterrows():
     session.add(stock_data)
 
 session.commit()
+session.close()
+
+logging.info(f"Finished Best/worst YTD, 0508, 0511 DB populating")
 
 import time
 import runpy
