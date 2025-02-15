@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logging.basicConfig(
-    filename="../watchdog_daily_routine.log",
+    filename="/home/frog/momentum_tg/momentum/watchdog_daily_routine.log",
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
@@ -72,7 +72,8 @@ class Weekly20Worst(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
 
 
-engine = create_engine(os.getenv("DB_STOCK_DATA"))
+#engine = create_engine(os.getenv("DB_STOCK_DATA"))
+engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
 # Base.metadata.create_all(engine)
 
 Session = sessionmaker(bind=engine)
@@ -167,4 +168,4 @@ import runpy
 print("5 seconds sleep after weekly is done")
 time.sleep(5)
 
-runpy.run_path(path_name="../tg_bot/tg_main.py")
+runpy.run_path(path_name="/home/frog/momentum_tg/momentum/tg_bot/tg_main.py")

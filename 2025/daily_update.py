@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 
 
 logging.basicConfig(
-    filename="../watchdog_daily_routine.log",
+    filename="/home/frog/momentum_tg/momentum/watchdog_daily_routine.log",
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
@@ -88,12 +88,14 @@ def download_tickers_from_yf(tickers, last_date):
     try:
         half_length_of_tickers = len(tickers) // 2
         df = yf.download(
-            tickers[:half_length_of_tickers], group_by="Ticker", start=last_date
+                tickers[:half_length_of_tickers], group_by="Ticker", start=last_date, end=date.today()
         )
         df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
         df = df.reset_index()
-        df.to_csv(f"daily_data_csv/{str(last_date).replace('-', '')}.csv", index=False)
-
+        df = df.dropna(axis=1, how='all')
+        df.to_csv(f"/home/frog/momentum_tg/momentum/2025/daily_data_csv/{str(last_date).replace('-', '')}.csv", index=False)
+        #df.to_csv(f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv", index=False)
+ 
         print("-------------------------------------")
         print("One minute sleep during downloading from YF")
         time.sleep(30)
@@ -102,16 +104,18 @@ def download_tickers_from_yf(tickers, last_date):
         print("-------------------------------------")
 
         df = yf.download(
-            tickers[half_length_of_tickers:], group_by="Ticker", start=last_date
+            tickers[half_length_of_tickers:], group_by="Ticker", start=last_date, end=date.today()
         )
         df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
         df = df.reset_index()
+        df = df.dropna(axis=1, how='all')
         df.to_csv(
-            f"daily_data_csv/{str(last_date).replace('-', '')}.csv",
+            f"/home/frog/momentum_tg/momentum/2025/daily_data_csv/{str(last_date).replace('-', '')}.csv",
             mode="a",
             index=False,
             header=False,
         )
+    
         print("YF tickers downloaded")
         logging.info("YF API connection successful. Data downloaded.")
     except Exception as e:
@@ -120,8 +124,9 @@ def download_tickers_from_yf(tickers, last_date):
 
 def read_df_from_csv_and_populate_db(last_date):
     try:
-        df = pd.read_csv(f"daily_data_csv/{str(last_date).replace('-', '')}.csv")
+        df = pd.read_csv(f"/home/frog/momentum_tg/momentum/2025/daily_data_csv/{str(last_date).replace('-', '')}.csv",engine='python')
         df["Date"] = pd.to_datetime(df["Date"]).dt.date
+        logging.info(f"DF len: {len(df)}")
 
         for _, row in df.iterrows():
             stock_price = StockData(
@@ -211,10 +216,10 @@ def counting_and_populating_ytd_0805_1105_return(tickers, last_date):
             )
 
             session.commit()
-            logging.info("YTD, 0508, 0511 calculations completed successfully.")
         except AttributeError as e:
-            logging.error(f"Error in YTD calculations: {e}", exc_info=True)
+            logging.error(f"Error with {ticker} in YTD calculations: {e}", exc_info=True)
 
+    logging.info("YTD, 0508, 0511 calculations completed successfully.")
     print("ytd_0805_1105_return counted")
 
 
@@ -253,11 +258,11 @@ def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
             )
             session.commit()
 
-            logging.info("Nasdaq SMAa populated successfully.")
         except Exception as e:
             logging.error(
-                f"Error in populating Nasdaq SMAs/Bad ticker {e}", exc_info=True
+                f"Error with {ticker} in populating Nasdaq SMAs/Bad ticker {e}", exc_info=True
             )
+    logging.info("Nasdaq SMAa populated successfully.")
     print("Nasdaq SMAa populated")
 
 
@@ -296,11 +301,11 @@ def nyse_counting_and_populating_DB_with_SMAs(last_date):
             )
             session.commit()
 
-            logging.info("Nyse SMAa populated successfully.")
         except Exception as e:
             logging.error(
-                f"Error in populating Nyse SMAs/Bad ticker {e}", exc_info=True
+                f"Error with {ticker} in populating Nyse SMAs/Bad ticker {e}", exc_info=True
             )
+    logging.info("Nyse SMAa populated successfully.")
     print("Nyse SMAa populated")
 
 
@@ -360,11 +365,11 @@ def check_above_below_sma(tickers, last_date):
 
             session.commit()
 
-            logging.info("Above/below SMAs counted.")
         except Exception as e:
             logging.error(
                 f"Error in counting above/below SMAs/Bad ticker {e}", exc_info=True
             )
+    logging.info("Above/below SMAs counted.")
     print("Above/below SMAs counted")
 
 
@@ -379,8 +384,9 @@ def main():
             .filter(ListOfTickers.market_cap > 10_000_000_000)
             .all()
         ]
+        logging.info(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
         print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
-        download_tickers_from_yf(list_of_tickers, previous_day)
+        #download_tickers_from_yf(list_of_tickers, previous_day)
         read_df_from_csv_and_populate_db(previous_day)
         daily_count_new_records(previous_day)
         counting_and_populating_ytd_0805_1105_return(list_of_tickers, previous_day)
@@ -397,8 +403,9 @@ def main():
 
 
 if __name__ == "__main__":
-    engine = create_engine(os.getenv("DB_STOCK_DATA"))
+    #engine = create_engine(os.getenv("DB_STOCK_DATA"))
     # Base.metadata.create_all(engine)
+    engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
 
     Session = sessionmaker(bind=engine)
     session = Session()
@@ -410,7 +417,7 @@ import runpy
 
 print("5 seconds sleep before counting YTD Agusut 5")
 time.sleep(5)
-runpy.run_path(path_name="ytd_0508_0511.py")
+runpy.run_path(path_name="/home/frog/momentum_tg/momentum/2025/ytd_0508_0511.py")
 
 
 # bad_tickers = ['BGNE', 'CBOE', 'CET', 'EXEEL', 'IMO'] bad for SMA
