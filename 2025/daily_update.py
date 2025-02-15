@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 import logging
+import runpy
 from datetime import date, timedelta
 from sqlalchemy import (
     create_engine,
@@ -165,6 +166,7 @@ def daily_count_new_records(last_date):
 
 
 def counting_and_populating_ytd_0805_1105_return(tickers, last_date):
+    logging.info("YTD, 0508, 0511 calculations started.")
     for ticker in tickers:
         try:
             last_day_closing_price = (
@@ -238,6 +240,7 @@ def counting_and_populating_ytd_0805_1105_return(tickers, last_date):
 
 
 def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
+    logging.info("Nasdaq SMAa calculations started.")
     nasdaq_list_of_tickers = [
         t[0]
         for t in session.query(ListOfTickers.ticker)
@@ -282,6 +285,7 @@ def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
 
 
 def nyse_counting_and_populating_DB_with_SMAs(last_date):
+    logging.info("Nyse SMAa calculations started.")
     nyse_list_of_tickers = [
         t[0]
         for t in session.query(ListOfTickers.ticker)
@@ -326,6 +330,7 @@ def nyse_counting_and_populating_DB_with_SMAs(last_date):
 
 
 def check_above_below_sma(tickers, last_date):
+    logging.info("Above/below SMAs counting started.")
     for ticker in tickers:
         try:
             session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
@@ -406,16 +411,24 @@ def main():
         print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
         download_tickers_from_yf(list_of_tickers, previous_day)
         read_df_from_csv_and_populate_db(previous_day)
-        daily_count_new_records(previous_day)
-        counting_and_populating_ytd_0805_1105_return(list_of_tickers, previous_day)
+        number_of_new_records_in_DB = daily_count_new_records(previous_day)
+        if number_of_new_records_in_DB > 0:
+            counting_and_populating_ytd_0805_1105_return(list_of_tickers, previous_day)
 
-        nasdaq_counting_and_populating_DB_with_SMAs(previous_day)
-        # It takes about 173 sec
-        nyse_counting_and_populating_DB_with_SMAs(previous_day)
+            nasdaq_counting_and_populating_DB_with_SMAs(previous_day)
+            # It takes about 173 sec
+            nyse_counting_and_populating_DB_with_SMAs(previous_day)
 
-        check_above_below_sma(list_of_tickers, previous_day)
+            check_above_below_sma(list_of_tickers, previous_day)
 
-        logging.info("All steps completed successfully.")
+            logging.info("All steps completed successfully.")
+
+            logging.info("5 seconds sleep before counting YTD Agusut 5")
+            time.sleep(5)
+            runpy.run_path(
+                path_name="/home/frog/momentum_tg/momentum/2025/ytd_0508_0511.py"
+            )
+
     except Exception as e:
         logging.critical(f"Critical error in main process: {e}", exc_info=True)
 
@@ -430,12 +443,6 @@ if __name__ == "__main__":
     main()
 
     session.close()
-
-import runpy
-
-print("5 seconds sleep before counting YTD Agusut 5")
-time.sleep(5)
-runpy.run_path(path_name="/home/frog/momentum_tg/momentum/2025/ytd_0508_0511.py")
 
 
 # bad_tickers = ['BGNE', 'CBOE', 'CET', 'EXEEL', 'IMO'] bad for SMA
