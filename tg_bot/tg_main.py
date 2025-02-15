@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 from sqlalchemy import create_engine, Column, Integer, String, Float, Date, Boolean
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
@@ -14,7 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logging.basicConfig(
-    filename="../watchdog_daily_routine.log",
+    filename="/home/frog/momentum_tg/momentum/watchdog_daily_routine.log",
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
@@ -23,11 +24,11 @@ logging.info(f"Starting telegram bot")
 
 print("TG bot started")
 
-logging.basicConfig(
-    filename="momentum.log",
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO,
-)
+#logging.basicConfig(
+#    filename="momentum.log",
+#    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+#    level=logging.INFO,
+#)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -130,8 +131,9 @@ class Weekly20Worst(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
 
 
-# TODO put it to .env
-engine = create_engine(os.getenv("DB_STOCK_DATA_TG"))
+#engine = create_engine(os.getenv("DB_STOCK_DATA_TG"))
+engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
+#engine = create_engine("sqlite:///momentum_tg/momentum/2025/historical_stock_data.db")
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -178,23 +180,29 @@ async def ytd_top20(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def ytd_bottom20(context: ContextTypes.DEFAULT_TYPE):
-    query_result = (
-        session.query(
-            YTD20Worst.date,
-            YTD20Worst.ticker,
-            YTD20Worst.pct_change,
+    try:
+        query_result = (
+            session.query(
+                YTD20Worst.date,
+                YTD20Worst.ticker,
+                YTD20Worst.pct_change,
+            )
+            .filter(YTD20Worst.date == previous_day)
+            .all()
         )
-        .filter(YTD20Worst.date == previous_day)
-        .all()
-    )
-    ytd_worst_msg = f"Worst performing stocks YTD as of {previous_day}\n\n"
-    for q in query_result:
-        ytd_worst_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
-    await context.bot.send_message(
-        chat_id=os.getenv("CJT_GROUP_ID"),
-        message_thread_id=os.getenv("TICKER_BOT_ROOM"),
-        text=ytd_worst_msg,
-    )
+        ytd_worst_msg = f"Worst performing stocks YTD as of {previous_day}\n\n"
+        for q in query_result:
+            ytd_worst_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
+        await context.bot.send_message(
+            chat_id=os.getenv("CJT_GROUP_ID"),
+            message_thread_id=os.getenv("TICKER_BOT_ROOM"),
+            text=ytd_worst_msg,
+        )
+        logging.info("ytd_bottom20 successly sent")
+    except Exception as e:
+        logger.error("ytd_bottom20 Error: %s", e)
+    #context.application.stop_running()
+
 
 
 async def august05_top20(context: ContextTypes.DEFAULT_TYPE):
@@ -346,3 +354,6 @@ job_queue.run_once(november05_bottom20, 23)
 logging.info("job queue ended")
 
 application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+logging.info(f"Finished TG bot")
+

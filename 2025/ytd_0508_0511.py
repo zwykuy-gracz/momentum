@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logging.basicConfig(
-    filename="../watchdog_daily_routine.log",
+    filename="/home/frog/momentum_tg/momentum/watchdog_daily_routine.log",
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
@@ -106,7 +106,8 @@ class November05Worst(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.november05_worst})>"
 
 
-engine = create_engine(os.getenv("DB_STOCK_DATA"))
+#engine = create_engine(os.getenv("DB_STOCK_DATA"))
+engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
 # engine = create_engine(os.getenv("DB_STOCK_DATA_BACKUP"))
 # Base.metadata.create_all(engine)
 
@@ -212,6 +213,6 @@ print("YTD finished - 5 seconds sleepipng")
 time.sleep(5)
 today = datetime.today().strftime("%A")
 if today == "Saturday":
-    runpy.run_path(path_name="weekly_change.py")
+    runpy.run_path(path_name="/home/frog/momentum_tg/momentum/2025/weekly_change.py")
 else:
-    runpy.run_path(path_name="../tg_bot/tg_main.py")
+    runpy.run_path(path_name="/home/frog/momentum_tg/momentum/tg_bot/tg_main.py")
