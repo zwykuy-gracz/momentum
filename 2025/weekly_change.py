@@ -113,6 +113,8 @@ def weekly_change(tickers):
 
         except AttributeError:
             print("Bad ticker:", ticker)
+            logging.error(f"Bad ticker: {ticker} in counting weekly change")
+    logging.info(f"Finished weekly change populating")
 
 
 previous_day = date.today() - timedelta(days=1)
