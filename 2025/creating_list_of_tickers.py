@@ -63,7 +63,7 @@ session = Session()
 
 """
 Populating DB with tickers step by step
-0. Download data for all, Nasdaq and Nyse tickers from https://www.nasdaq.com/market-activity/stocks/screener
+0. Download data for all Nasdaq and Nyse tickers from https://www.nasdaq.com/market-activity/stocks/screener
 1. Create DF with tickers and Market Cap
 2. Populate DB with tickers and Market Cap. Set nasdaq_tickers and nyse_tickers to False
 3. Update nasdaq_tickers and nyse_tickers to True for Nasdaq and Nyse tickers
