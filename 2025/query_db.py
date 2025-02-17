@@ -1,8 +1,8 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float
-from sqlalchemy import Date, Boolean, Table, MetaData
-from sqlalchemy.orm import sessionmaker, declarative_base 
+from sqlalchemy import Date, Boolean
+from sqlalchemy.orm import sessionmaker, declarative_base
 import os
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -35,6 +35,18 @@ class HistoricalStockData(Base):
         return f"<StockPrice(ticker='{self.ticker}', date='{self.date}', close={self.close})>"
 
 
+class TickersList10B(Base):
+    __tablename__ = "list_of_tickers_lt_10B"
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String, nullable=False, index=True)
+    nasdaq_tickers = Column(String, nullable=False)
+    nyse_tickers = Column(String, nullable=False)
+
+    def __repr__(self):
+        return f"<StockPrice(ticker='{self.ticker}')>"
+
+
 engine = create_engine(os.getenv("DB_STOCK_DATA"))
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -42,16 +54,18 @@ session = Session()
 previous_day = date.today() - timedelta(days=1)
 
 # Delete records
-#session.query(HistoricalStockData).filter(
+# session.query(HistoricalStockData).filter(
 #    HistoricalStockData.date == date(2025, 2, 14)
-#).delete()
-#session.commit()
+# ).delete()
+# session.commit()
 
-#specific_date = date(2025, 2, 11)
-specific_date = previous_day 
+# specific_date = date(2025, 2, 11)
+specific_date = previous_day
 query_result = (
     session.query(HistoricalStockData)
     .filter(HistoricalStockData.date == specific_date)
     .all()
 )
-print(f"DB records for {specific_date}: {len(query_result)}")
+query_result_10B = session.query(TickersList10B).all()
+# print(f"DB records for {specific_date}: {len(query_result)}")
+# print(f"Number of tickers lt 10B: {len(query_result_10B)}")

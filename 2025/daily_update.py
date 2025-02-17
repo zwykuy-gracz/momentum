@@ -83,6 +83,18 @@ class ListOfTickers(Base):
         return f"<StockData(ticker='{self.ticker}')>"
 
 
+class TickersList10B(Base):
+    __tablename__ = "list_of_tickers_lt_10B"
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String, nullable=False, index=True)
+    nasdaq_tickers = Column(String, nullable=False)
+    nyse_tickers = Column(String, nullable=False)
+
+    def __repr__(self):
+        return f"<StockPrice(ticker='{self.ticker}')>"
+
+
 # downloads from YF and write DFs to files
 def download_tickers_from_yf(tickers, last_date):
     try:
@@ -240,14 +252,9 @@ def counting_and_populating_ytd_0805_1105_return(tickers, last_date):
 def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
     logging.info("Nasdaq SMAa calculations started.")
     nasdaq_list_of_tickers = [
-        t[0]
-        for t in session.query(ListOfTickers.ticker)
-        .filter(
-            and_(
-                ListOfTickers.nasdaq_tickers == True,
-                ListOfTickers.market_cap > 10_000_000_000,
-            )
-        )
+        t.ticker
+        for t in session.query(TickersList10B)
+        .filter(TickersList10B.nasdaq_tickers == True)
         .all()
     ]
     for i, ticker in enumerate(nasdaq_list_of_tickers):
@@ -285,14 +292,9 @@ def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
 def nyse_counting_and_populating_DB_with_SMAs(last_date):
     logging.info("Nyse SMAa calculations started.")
     nyse_list_of_tickers = [
-        t[0]
-        for t in session.query(ListOfTickers.ticker)
-        .filter(
-            and_(
-                ListOfTickers.nyse_tickers == True,
-                ListOfTickers.market_cap > 10_000_000_000,
-            )
-        )
+        t.ticker
+        for t in session.query(TickersList10B)
+        .filter(TickersList10B.nyse_tickers == True)
         .all()
     ]
     for i, ticker in enumerate(nyse_list_of_tickers):
@@ -397,12 +399,7 @@ def main():
         previous_day = date.today() - timedelta(days=1)
         print(f"Working on date: {previous_day}")
         logging.info(f"Working on date: {previous_day}")
-        list_of_tickers = [
-            t[0]
-            for t in session.query(ListOfTickers.ticker)
-            .filter(ListOfTickers.market_cap > 10_000_000_000)
-            .all()
-        ]
+        list_of_tickers = [t.ticker for t in session.query(TickersList10B).all()]
         logging.info(
             f"Created list of tickers from DB with length: {len(list_of_tickers)}"
         )
