@@ -21,14 +21,13 @@ import os
 import time
 from dotenv import load_dotenv
 
+load_dotenv()
 
 logging.basicConfig(
-    filename="/home/frog/momentum_tg/momentum/watchdog_daily_routine.log",
+    filename=os.getenv("LOG_FILE"),
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-
-load_dotenv()
 
 
 """
@@ -98,10 +97,9 @@ def download_tickers_from_yf(tickers, last_date):
         df = df.reset_index()
         df = df.dropna(axis=1, how="all")
         df.to_csv(
-            f"/home/frog/momentum_tg/momentum/2025/daily_data_csv/{str(last_date).replace('-', '')}.csv",
+            f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
             index=False,
         )
-        # df.to_csv(f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv", index=False)
 
         print("-------------------------------------")
         print("One minute sleep during downloading from YF")
@@ -120,7 +118,7 @@ def download_tickers_from_yf(tickers, last_date):
         df = df.reset_index()
         df = df.dropna(axis=1, how="all")
         df.to_csv(
-            f"/home/frog/momentum_tg/momentum/2025/daily_data_csv/{str(last_date).replace('-', '')}.csv",
+            f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
             mode="a",
             index=False,
             header=False,
@@ -135,7 +133,7 @@ def download_tickers_from_yf(tickers, last_date):
 def read_df_from_csv_and_populate_db(last_date):
     try:
         df = pd.read_csv(
-            f"/home/frog/momentum_tg/momentum/2025/daily_data_csv/{str(last_date).replace('-', '')}.csv",
+            f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
             engine="python",
         )
         df["Date"] = pd.to_datetime(df["Date"]).dt.date
@@ -425,18 +423,20 @@ def main():
 
             logging.info("5 seconds sleep before counting YTD Agusut 5")
             time.sleep(5)
-            runpy.run_path(
-                path_name="/home/frog/momentum_tg/momentum/2025/ytd_0508_0511.py"
-            )
+            try:
+                runpy.run_path(path_name=os.getenv("YTD_0508_0511_PATH"))
+            except Exception as e:
+                logging.error(
+                    f"Error in reaching YTD_0508_0511 script: {e}", exc_info=True
+                )
 
     except Exception as e:
         logging.critical(f"Critical error in main process: {e}", exc_info=True)
 
 
 if __name__ == "__main__":
-    # engine = create_engine(os.getenv("DB_STOCK_DATA"))
-    # Base.metadata.create_all(engine)
     engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
+    # Base.metadata.create_all(engine)
 
     Session = sessionmaker(bind=engine)
     session = Session()

@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy import Float, Date, Boolean, union_all
+from sqlalchemy import Float, Date
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 import pandas as pd
@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logging.basicConfig(
-    filename="/home/frog/momentum_tg/momentum/watchdog_daily_routine.log",
+    filename=os.getenv("LOG_FILE"),
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
@@ -72,7 +72,6 @@ class Weekly20Worst(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
 
 
-#engine = create_engine(os.getenv("DB_STOCK_DATA"))
 engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
 # Base.metadata.create_all(engine)
 
@@ -167,5 +166,7 @@ import runpy
 
 print("5 seconds sleep after weekly is done")
 time.sleep(5)
-
-runpy.run_path(path_name="/home/frog/momentum_tg/momentum/tg_bot/tg_main.py")
+try:
+    runpy.run_path(path_name=os.getenv("TG_BOT_PATH"))
+except Exception as e:
+    logging.error(f"Error in running tg_bot.py: {e}")
