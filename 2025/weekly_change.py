@@ -22,17 +22,16 @@ Base = declarative_base()
 print("Starting best/worst weekly DB populating")
 
 
-class ListOfTickers(Base):
-    __tablename__ = "list_of_tickers_lt_1B"
+class TickersList10B(Base):
+    __tablename__ = "list_of_tickers_lt_10B"
 
     id = Column(Integer, primary_key=True)
     ticker = Column(String, nullable=False, index=True)
-    market_cap = Column(Float, nullable=False)
     nasdaq_tickers = Column(String, nullable=False)
     nyse_tickers = Column(String, nullable=False)
 
     def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}')>"
+        return f"<StockPrice(ticker='{self.ticker}')>"
 
 
 class SourceData(Base):
@@ -118,12 +117,7 @@ def weekly_change(tickers):
 
 
 previous_day = date.today() - timedelta(days=1)
-list_of_tickers = [
-    t[0]
-    for t in session.query(ListOfTickers.ticker)
-    .filter(ListOfTickers.market_cap > 10_000_000_000)
-    .all()
-]
+list_of_tickers = [t.ticker for t in session.query(TickersList10B).all()]
 weekly_change(list_of_tickers)
 
 query_result = (

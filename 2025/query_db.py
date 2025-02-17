@@ -67,5 +67,12 @@ query_result = (
     .all()
 )
 query_result_10B = session.query(TickersList10B).all()
+nasdaq_list_of_tickers = [
+    t.ticker
+    for t in session.query(TickersList10B)
+    .filter(TickersList10B.nasdaq_tickers == True)
+    .all()
+]
+print(nasdaq_list_of_tickers[:5])
 # print(f"DB records for {specific_date}: {len(query_result)}")
 # print(f"Number of tickers lt 10B: {len(query_result_10B)}")

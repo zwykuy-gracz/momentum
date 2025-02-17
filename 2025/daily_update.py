@@ -70,19 +70,6 @@ class StockData(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.close})>"
 
 
-class ListOfTickers(Base):
-    __tablename__ = "list_of_tickers_lt_1B"
-
-    id = Column(Integer, primary_key=True)
-    ticker = Column(String, nullable=False, index=True)
-    market_cap = Column(Float, nullable=False)
-    nasdaq_tickers = Column(String, nullable=False)
-    nyse_tickers = Column(String, nullable=False)
-
-    def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}')>"
-
-
 class TickersList10B(Base):
     __tablename__ = "list_of_tickers_lt_10B"
 
