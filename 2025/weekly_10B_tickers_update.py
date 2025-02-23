@@ -13,7 +13,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
-logging.info("Starting weekly_10B_tickers_update.py")
 Base = declarative_base()
 
 
@@ -54,9 +53,14 @@ class TickersList1B(Base):
 
 
 engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
-# Base.metadata.create_all(engine)
+Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
+
+
+def query_db_length_before():
+    query_result_10B = session.query(TickersList10B).all()
+    logging.info(f"Number of tickers lt 10B BEFORE`: {len(query_result_10B)}")
 
 
 # Step 1: Create DF with tickers and Market Cap
@@ -104,7 +108,6 @@ def delete_lt_10B():
 # Step 5: Populate table list_of_tickers_lt_10B with tickers with market_cap > 10B - copy from list_of_tickers_lt_1B
 def populate_lt_10B(lt_10B):
     for ticker in lt_10B:
-
         stock_price = TickersList10B(
             ticker=ticker.ticker,
             nasdaq_tickers=ticker.nasdaq_tickers,
@@ -113,13 +116,24 @@ def populate_lt_10B(lt_10B):
         session.add(stock_price)
     logging.info("Tickers with market_cap > 10B populated")
     session.commit()
-    # print(len(lt_10B))
 
 
-if __name__ == "__main__":
-    df_1B_ticker_MC = create_df_lt_1B("nasdaq_screener_1739814766645.csv")
+def query_db_length_after():
+    query_result_10B = session.query(TickersList10B).all()
+    logging.info(f"Number of tickers lt 10B AFTER: {len(query_result_10B)}")
+
+
+def main():
+    logging.info("Starting weekly_10B_tickers_update.py")
+    query_db_length_before()
+    df_1B_ticker_MC = create_df_lt_1B("nasdaq_screener_1740347841032.csv")
     update_market_cap(df_1B_ticker_MC)
     lt_10B_tickers = select_lt_10B()
     delete_lt_10B()
     populate_lt_10B(lt_10B_tickers)
+    query_db_length_after()
     logging.info("weekly_10B_tickers_update.py finished")
+
+
+if __name__ == "__main__":
+    main()

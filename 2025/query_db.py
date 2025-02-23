@@ -73,6 +73,6 @@ nasdaq_list_of_tickers = [
     .filter(TickersList10B.nasdaq_tickers == True)
     .all()
 ]
-print(nasdaq_list_of_tickers[:5])
+# print(nasdaq_list_of_tickers[:5])
 # print(f"DB records for {specific_date}: {len(query_result)}")
-# print(f"Number of tickers lt 10B: {len(query_result_10B)}")
+print(f"Number of tickers lt 10B: {len(query_result_10B)}")
