@@ -47,6 +47,7 @@ class TickersList10B(Base):
         return f"<StockPrice(ticker='{self.ticker}')>"
 
 
+# engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
 engine = create_engine(os.getenv("DB_STOCK_DATA"))
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -54,10 +55,10 @@ session = Session()
 previous_day = date.today() - timedelta(days=1)
 
 # Delete records
-# session.query(HistoricalStockData).filter(
-#    HistoricalStockData.date == date(2025, 2, 14)
-# ).delete()
-# session.commit()
+#session.query(HistoricalStockData).filter(
+#    HistoricalStockData.date == date(2025, 2, 18)
+#).delete()
+#session.commit()
 
 # specific_date = date(2025, 2, 11)
 specific_date = previous_day
@@ -66,13 +67,21 @@ query_result = (
     .filter(HistoricalStockData.date == specific_date)
     .all()
 )
-query_result_10B = session.query(TickersList10B).all()
+print(111)
+print(f"DB records for {specific_date}: {len(query_result)}")
+print(222)
+#query_result_10B = session.query(TickersList10B).all()
 nasdaq_list_of_tickers = [
     t.ticker
     for t in session.query(TickersList10B)
     .filter(TickersList10B.nasdaq_tickers == True)
     .all()
 ]
+<<<<<<< HEAD
 # print(nasdaq_list_of_tickers[:5])
 # print(f"DB records for {specific_date}: {len(query_result)}")
 print(f"Number of tickers lt 10B: {len(query_result_10B)}")
+=======
+#print(nasdaq_list_of_tickers[:5])
+# print(f"Number of tickers lt 10B: {len(query_result_10B)}")
+>>>>>>> yf_third

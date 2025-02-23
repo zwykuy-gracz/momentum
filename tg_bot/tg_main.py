@@ -125,15 +125,19 @@ class Weekly20Worst(Base):
     def __repr__(self):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
 
+try:
+    engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
+    logging.info(f"TG Engine created")
+except Exception as e:
+    logging.error(f"Engine creation failed: {e}", exc_info=True)
 
-engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
 Session = sessionmaker(bind=engine)
 session = Session()
 
 previous_day = date.today() - timedelta(days=1)
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def user_info_momentum(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("User %s started the conversation.", update)
     await update.message.reply_text("info")
 
@@ -297,6 +301,7 @@ async def november05_bottom20(context: ContextTypes.DEFAULT_TYPE):
         logging.info("november05_bottom20 successly sent")
     except Exception as e:
         logger.error("november05_bottom20 Error: %s", e)
+    context.application.stop_running()
 
 
 async def weekly_top20(context: ContextTypes.DEFAULT_TYPE):
@@ -349,7 +354,7 @@ async def weekly_bottom20(context: ContextTypes.DEFAULT_TYPE):
 
 application = Application.builder().token(os.getenv("TG_TOKEN")).build()
 
-application.add_handler(CommandHandler("info", start))
+application.add_handler(CommandHandler("info", user_info_momentum))
 logging.info("starting job queue")
 job_queue = application.job_queue
 today = datetime.today().strftime("%A")

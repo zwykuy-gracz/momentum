@@ -86,8 +86,9 @@ class TickersList10B(Base):
 def download_tickers_from_yf(tickers, last_date):
     try:
         half_length_of_tickers = len(tickers) // 2
+        third_length_of_tickers = len(tickers) // 3
         df = yf.download(
-            tickers[:half_length_of_tickers],
+            tickers[:third_length_of_tickers],
             group_by="Ticker",
             start=last_date,
             end=date.today(),
@@ -108,7 +109,30 @@ def download_tickers_from_yf(tickers, last_date):
         print("-------------------------------------")
 
         df = yf.download(
-            tickers[half_length_of_tickers:],
+            tickers[third_length_of_tickers:third_length_of_tickers*2],
+            group_by="Ticker",
+            start=last_date,
+            end=date.today(),
+        )
+        df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
+        df = df.reset_index()
+        df = df.dropna(axis=1, how="all")
+        df.to_csv(
+            f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
+            mode="a",
+            index=False,
+            header=False,
+        )
+        
+        print("-------------------------------------")
+        print("One minute sleep during downloading from YF")
+        time.sleep(30)
+        print("30 more seconds")
+        time.sleep(30)
+        print("-------------------------------------")
+
+        df = yf.download(
+            tickers[third_length_of_tickers*2:],
             group_by="Ticker",
             start=last_date,
             end=date.today(),
@@ -160,6 +184,7 @@ def read_df_from_csv_and_populate_db(last_date):
 def daily_count_new_records(last_date):
     query_result = session.query(StockData).filter(StockData.date == last_date).all()
     logging.info(f"Number of new records in DB as of {last_date}: {len(query_result)}")
+    return len(query_result)
 
 
 def counting_and_populating_ytd_0805_1105_return(tickers, last_date):
