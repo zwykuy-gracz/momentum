@@ -70,7 +70,7 @@ query_result = (
 print(111)
 print(f"DB records for {specific_date}: {len(query_result)}")
 print(222)
-# query_result_10B = session.query(TickersList10B).all()
+query_result_10B = session.query(TickersList10B).all()
 nasdaq_list_of_tickers = [
     t.ticker
     for t in session.query(TickersList10B)

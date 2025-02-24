@@ -30,6 +30,16 @@ logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 
+class TickersList10B(Base):
+    __tablename__ = "list_of_tickers_lt_10B"
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String, nullable=False, index=True)
+
+    def __repr__(self):
+        return f"<StockPrice(ticker='{self.ticker}')>"
+
+
 class YTD20Best(Base):
     __tablename__ = "ytd_best"
 
@@ -125,6 +135,7 @@ class Weekly20Worst(Base):
     def __repr__(self):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
 
+
 try:
     engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
     logging.info(f"TG Engine created")
@@ -142,13 +153,18 @@ async def user_info_momentum(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await update.message.reply_text("info")
 
 
-async def start_msg(context: ContextTypes.DEFAULT_TYPE):
-    msg = "/start@cjt_ticker_bot"
-    await context.bot.send_message(
-        chat_id=os.getenv("CJT_GROUP_ID"),
-        message_thread_id=os.getenv("TICKER_BOT_ROOM"),
-        text=msg,
-    )
+async def tuesday_number_of_tickers(context: ContextTypes.DEFAULT_TYPE):
+    try:
+        query_result_10B = session.query(TickersList10B).all()
+        msg = f"Number of tickers this week: {len(query_result_10B)}"
+        await context.bot.send_message(
+            chat_id=os.getenv("CJT_GROUP_ID"),
+            message_thread_id=os.getenv("TICKER_BOT_ROOM"),
+            text=msg,
+        )
+        logging.info("tuesday_number_of_tickers successly sent")
+    except Exception as e:
+        logger.error("tuesday_number_of_tickers Error: %s", e)
 
 
 async def ytd_top20(context: ContextTypes.DEFAULT_TYPE):
@@ -358,7 +374,9 @@ application.add_handler(CommandHandler("info", user_info_momentum))
 logging.info("starting job queue")
 job_queue = application.job_queue
 today = datetime.today().strftime("%A")
-if today == "Saturday":
+if today.lower() == "tuesday":
+    job_queue.run_once(tuesday_number_of_tickers, 4)
+elif today == "Saturday":
     job_queue.run_once(weekly_top20, 2)
     job_queue.run_once(weekly_bottom20, 4)
 job_queue.run_once(ytd_top20, 7)
