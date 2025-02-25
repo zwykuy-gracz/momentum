@@ -1,3 +1,4 @@
 from django.contrib import admin
+from .models import ListOfTickersLt10B
 
-# Register your models here.
+admin.site.register(ListOfTickersLt10B)
