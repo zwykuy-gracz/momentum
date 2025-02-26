@@ -128,8 +128,8 @@ print(round(market_breadth, 2))
 
 # TODO
 """
+spr jeszcze raz obliczenia
 Stworzyć tabelę w DB market breadth
-w pandas groupby 1/0 policzyć % i wrzucić do DB
 zrobić z tego wykresy
 dodać tę fukcję w daily_update
 """
