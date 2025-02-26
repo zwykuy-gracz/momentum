@@ -67,6 +67,6 @@ class WeeklyChangeWorstSchema(ModelSchema):
 
 
 # class MarketBreadth(ModelSchema):
-#     # 20250121 for sure
+#     # 20250117 first date
 #     class Meta:
 #         pass

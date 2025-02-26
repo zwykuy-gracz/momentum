@@ -60,16 +60,13 @@ previous_day = date.today() - timedelta(days=1)
 # ).delete()
 # session.commit()
 
-# specific_date = date(2025, 2, 11)
 specific_date = previous_day
 query_result = (
     session.query(HistoricalStockData)
     .filter(HistoricalStockData.date == specific_date)
     .all()
 )
-print(111)
-print(f"DB records for {specific_date}: {len(query_result)}")
-print(222)
+# print(f"DB records for {specific_date}: {len(query_result)}")
 query_result_10B = session.query(TickersList10B).all()
 nasdaq_list_of_tickers = [
     t.ticker
