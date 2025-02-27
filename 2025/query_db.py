@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float
-from sqlalchemy import Date, Boolean
+from sqlalchemy import Date, Boolean, Table, MetaData
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 from datetime import date, timedelta
@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 Base = declarative_base()
+metadata = MetaData()
 
 
 class HistoricalStockData(Base):
@@ -77,3 +78,13 @@ nasdaq_list_of_tickers = [
 # print(nasdaq_list_of_tickers[:5])
 # print(f"DB records for {specific_date}: {len(query_result)}")
 # print(f"Number of tickers lt 10B: {len(query_result_10B)}")
+
+# DROP Table
+# table_to_drop = Table("market_breadth", metadata, autoload_with=engine)
+# table_to_drop.drop(engine)
+
+# Delete records
+# session.query(HistoricalStockData).filter(
+#     HistoricalStockData.date == date(2025, 2, 3)
+# ).delete()
+# session.commit()

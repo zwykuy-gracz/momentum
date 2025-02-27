@@ -53,3 +53,5 @@ npm-debug.log
 # Other
 *.sqlite
 *.db
+market_breadth_screens/
+*.png

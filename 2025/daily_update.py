@@ -109,7 +109,7 @@ def download_tickers_from_yf(tickers, last_date):
         print("-------------------------------------")
 
         df = yf.download(
-            tickers[third_length_of_tickers:third_length_of_tickers*2],
+            tickers[third_length_of_tickers : third_length_of_tickers * 2],
             group_by="Ticker",
             start=last_date,
             end=date.today(),
@@ -123,7 +123,7 @@ def download_tickers_from_yf(tickers, last_date):
             index=False,
             header=False,
         )
-        
+
         print("-------------------------------------")
         print("One minute sleep during downloading from YF")
         time.sleep(30)
@@ -132,7 +132,7 @@ def download_tickers_from_yf(tickers, last_date):
         print("-------------------------------------")
 
         df = yf.download(
-            tickers[third_length_of_tickers*2:],
+            tickers[third_length_of_tickers * 2 :],
             group_by="Ticker",
             start=last_date,
             end=date.today(),
@@ -430,13 +430,13 @@ def main():
 
             logging.info("All steps completed successfully.")
 
-            logging.info("5 seconds sleep before counting YTD Agusut 5")
+            logging.info("5 seconds sleep before counting market breadth")
             time.sleep(5)
             try:
-                runpy.run_path(path_name=os.getenv("YTD_0508_0511_PATH"))
+                runpy.run_path(path_name=os.getenv("MARKET_BREADTH_PATH"))
             except Exception as e:
                 logging.error(
-                    f"Error in reaching YTD_0508_0511 script: {e}", exc_info=True
+                    f"Error in reaching MARKET_BREADTH_PATH script: {e}", exc_info=True
                 )
 
     except Exception as e:

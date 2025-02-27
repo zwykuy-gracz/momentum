@@ -4,9 +4,9 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 import logging
 import time
+import logging
 from datetime import date, timedelta, datetime
 import pandas as pd
-import logging
 
 from telegram import Update
 from telegram.ext import ContextTypes, Application, CommandHandler
@@ -317,7 +317,6 @@ async def november05_bottom20(context: ContextTypes.DEFAULT_TYPE):
         logging.info("november05_bottom20 successly sent")
     except Exception as e:
         logger.error("november05_bottom20 Error: %s", e)
-    context.application.stop_running()
 
 
 async def weekly_top20(context: ContextTypes.DEFAULT_TYPE):
@@ -368,6 +367,19 @@ async def weekly_bottom20(context: ContextTypes.DEFAULT_TYPE):
         logger.error("weekly_bottom20 Error: %s", e)
 
 
+async def market_breadth(context: ContextTypes.DEFAULT_TYPE) -> None:
+    try:
+        await context.bot.send_photo(
+            chat_id=os.getenv("CJT_GROUP_ID"),
+            message_thread_id=os.getenv("TICKER_BOT_ROOM"),
+            photo=f"{os.getenv('MARKET_BREADTH_SCREENS_FOLDER')}/{str(previous_day).replace('-', '')}.png",
+        )
+        logging.info("market_breadth successly sent")
+    except Exception as e:
+        logger.error("market_breadth Error: %s", e)
+    context.application.stop_running()
+
+
 application = Application.builder().token(os.getenv("TG_TOKEN")).build()
 
 application.add_handler(CommandHandler("info", user_info_momentum))
@@ -385,6 +397,7 @@ job_queue.run_once(august05_top20, 13)
 job_queue.run_once(august05_bottom20, 17)
 job_queue.run_once(november05_top20, 20)
 job_queue.run_once(november05_bottom20, 23)
+job_queue.run_once(market_breadth, 26)
 logging.info("job queue ended")
 
 application.run_polling(allowed_updates=Update.ALL_TYPES)
