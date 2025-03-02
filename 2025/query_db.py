@@ -61,7 +61,8 @@ previous_day = date.today() - timedelta(days=1)
 # ).delete()
 # session.commit()
 
-specific_date = previous_day
+# specific_date = previous_day
+specific_date = date(2024, 8, 5)
 query_result = (
     session.query(HistoricalStockData)
     .filter(HistoricalStockData.date == specific_date)
@@ -88,3 +89,30 @@ nasdaq_list_of_tickers = [
 #     HistoricalStockData.date == date(2025, 2, 3)
 # ).delete()
 # session.commit()
+
+import pandas as pd
+
+
+def create_df_lt_1B(filename):
+    df_csv = pd.read_csv(filename)
+    df = df_csv.dropna(subset=["Market Cap"], inplace=False)
+    df_one_bill = df[df["Market Cap"] >= 5_000_000_000]
+    df_ticker_MC = df_one_bill[["Symbol", "Market Cap"]]
+    return df_ticker_MC
+
+
+# df_1B_ticker_MC = create_df_lt_1B("nasdaq_screener_1740347841032.csv")
+# print(len(df_1B_ticker_MC))
+
+n = 34
+fifth = n // 5
+
+for i in range(5):
+    beginning = fifth * i
+    end = fifth * (i + 1)
+    for _ in range(beginning, end):
+        print(f"{beginning}, {end}", i)
+print("---")
+if n > fifth * 5:
+    for i in range(fifth * 5, n):
+        print(f"{fifth * 5}, {n}", i)
