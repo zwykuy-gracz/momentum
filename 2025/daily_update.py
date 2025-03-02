@@ -70,6 +70,7 @@ class StockData(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.close})>"
 
 
+# Not in use anymore TODO to be removed
 class TickersList10B(Base):
     __tablename__ = "list_of_tickers_lt_10B"
 
@@ -77,6 +78,18 @@ class TickersList10B(Base):
     ticker = Column(String, nullable=False, index=True)
     nasdaq_tickers = Column(String, nullable=False)
     nyse_tickers = Column(String, nullable=False)
+
+    def __repr__(self):
+        return f"<StockPrice(ticker='{self.ticker}')>"
+
+
+class TickersList5B(Base):
+    __tablename__ = "list_of_tickers_lt_5B"
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String, nullable=False, index=True)
+    nasdaq_tickers = Column(Boolean, nullable=False)
+    nyse_tickers = Column(Boolean, nullable=False)
 
     def __repr__(self):
         return f"<StockPrice(ticker='{self.ticker}')>"
@@ -265,14 +278,12 @@ def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
     logging.info("Nasdaq SMAa calculations started.")
     nasdaq_list_of_tickers = [
         t.ticker
-        for t in session.query(TickersList10B)
-        .filter(TickersList10B.nasdaq_tickers == True)
+        for t in session.query(TickersList5B)
+        .filter(TickersList5B.nasdaq_tickers == True)
         .all()
     ]
-    for i, ticker in enumerate(nasdaq_list_of_tickers):
-        time.sleep(0.1)
-        if i % 50 == 0:
-            print("Nasdaq", i)
+    for ticker in nasdaq_list_of_tickers:
+        time.sleep(0.15)
         try:
             stock_ticker = TA_Handler(
                 symbol=ticker,
@@ -305,14 +316,12 @@ def nyse_counting_and_populating_DB_with_SMAs(last_date):
     logging.info("Nyse SMAa calculations started.")
     nyse_list_of_tickers = [
         t.ticker
-        for t in session.query(TickersList10B)
-        .filter(TickersList10B.nyse_tickers == True)
+        for t in session.query(TickersList5B)
+        .filter(TickersList5B.nyse_tickers == True)
         .all()
     ]
-    for i, ticker in enumerate(nyse_list_of_tickers):
-        time.sleep(0.1)
-        if i % 50 == 0:
-            print("Nyse", i)
+    for ticker in nyse_list_of_tickers:
+        time.sleep(0.15)
         try:
             stock_ticker = TA_Handler(
                 symbol=ticker,
@@ -411,7 +420,7 @@ def main():
         previous_day = date.today() - timedelta(days=1)
         print(f"Working on date: {previous_day}")
         logging.info(f"Working on date: {previous_day}")
-        list_of_tickers = [t.ticker for t in session.query(TickersList10B).all()]
+        list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
         logging.info(
             f"Created list of tickers from DB with length: {len(list_of_tickers)}"
         )
@@ -423,7 +432,7 @@ def main():
             counting_and_populating_ytd_0805_1105_return(list_of_tickers, previous_day)
 
             nasdaq_counting_and_populating_DB_with_SMAs(previous_day)
-            # It takes about 173 sec
+            # It takes about 270 sec
             nyse_counting_and_populating_DB_with_SMAs(previous_day)
 
             check_above_below_sma(list_of_tickers, previous_day)

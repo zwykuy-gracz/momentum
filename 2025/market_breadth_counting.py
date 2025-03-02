@@ -161,9 +161,3 @@ if len(query_result_mb) > 0:
         )
 
 session.close()
-
-# TODO
-"""
-dodać tę fukcję w daily_update
-dodać tę fukcję w telegramie
-"""

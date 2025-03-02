@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy import Float, Date
+from sqlalchemy import Float, Date, Boolean
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 import pandas as pd
@@ -22,6 +22,7 @@ Base = declarative_base()
 print("Starting best/worst weekly DB populating")
 
 
+# Not in use anymore TODO delete
 class TickersList10B(Base):
     __tablename__ = "list_of_tickers_lt_10B"
 
@@ -29,6 +30,18 @@ class TickersList10B(Base):
     ticker = Column(String, nullable=False, index=True)
     nasdaq_tickers = Column(String, nullable=False)
     nyse_tickers = Column(String, nullable=False)
+
+    def __repr__(self):
+        return f"<StockPrice(ticker='{self.ticker}')>"
+
+
+class TickersList5B(Base):
+    __tablename__ = "list_of_tickers_lt_5B"
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String, nullable=False, index=True)
+    nasdaq_tickers = Column(Boolean, nullable=False)
+    nyse_tickers = Column(Boolean, nullable=False)
 
     def __repr__(self):
         return f"<StockPrice(ticker='{self.ticker}')>"
@@ -117,7 +130,7 @@ def weekly_change(tickers):
 
 
 previous_day = date.today() - timedelta(days=1)
-list_of_tickers = [t.ticker for t in session.query(TickersList10B).all()]
+list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
 weekly_change(list_of_tickers)
 
 query_result = (
