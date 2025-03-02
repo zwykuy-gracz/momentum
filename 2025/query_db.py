@@ -36,13 +36,13 @@ class HistoricalStockData(Base):
         return f"<StockPrice(ticker='{self.ticker}', date='{self.date}', close={self.close})>"
 
 
-class TickersList10B(Base):
-    __tablename__ = "list_of_tickers_lt_10B"
+class TickersList5B(Base):
+    __tablename__ = "list_of_tickers_lt_5B"
 
     id = Column(Integer, primary_key=True)
     ticker = Column(String, nullable=False, index=True)
-    nasdaq_tickers = Column(String, nullable=False)
-    nyse_tickers = Column(String, nullable=False)
+    nasdaq_tickers = Column(Boolean, nullable=False)
+    nyse_tickers = Column(Boolean, nullable=False)
 
     def __repr__(self):
         return f"<StockPrice(ticker='{self.ticker}')>"
@@ -62,18 +62,18 @@ previous_day = date.today() - timedelta(days=1)
 # session.commit()
 
 # specific_date = previous_day
-specific_date = date(2024, 8, 5)
+specific_date = date(2025, 2, 28)
 query_result = (
     session.query(HistoricalStockData)
     .filter(HistoricalStockData.date == specific_date)
     .all()
 )
 # print(f"DB records for {specific_date}: {len(query_result)}")
-query_result_10B = session.query(TickersList10B).all()
+query_result_10B = session.query(TickersList5B).all()
 nasdaq_list_of_tickers = [
     t.ticker
-    for t in session.query(TickersList10B)
-    .filter(TickersList10B.nasdaq_tickers == True)
+    for t in session.query(TickersList5B)
+    .filter(TickersList5B.nasdaq_tickers == True)
     .all()
 ]
 # print(nasdaq_list_of_tickers[:5])
@@ -104,15 +104,121 @@ def create_df_lt_1B(filename):
 # df_1B_ticker_MC = create_df_lt_1B("nasdaq_screener_1740347841032.csv")
 # print(len(df_1B_ticker_MC))
 
-n = 34
-fifth = n // 5
 
-for i in range(5):
-    beginning = fifth * i
-    end = fifth * (i + 1)
-    for _ in range(beginning, end):
-        print(f"{beginning}, {end}", i)
-print("---")
-if n > fifth * 5:
-    for i in range(fifth * 5, n):
-        print(f"{fifth * 5}, {n}", i)
+# for i in range(5):
+#     beginning = fifth * i
+#     end = fifth * (i + 1)
+#     for _ in range(beginning, end):
+#         print(f"{beginning}, {end}", i)
+# print("---")
+# if n > fifth * 5:
+#     for i in range(fifth * 5, n):
+#         print(f"{fifth * 5}, {n}", i)
+
+import time
+import yfinance as yf
+
+
+def download_tickers_from_yf(tickers, last_date):
+    fifth_length_of_tickers = len(tickers) // 5
+    try:
+        df = yf.download(
+            tickers[:fifth_length_of_tickers],
+            group_by="Ticker",
+            start=last_date,
+            # end=date.today(),
+            end=date(2025, 3, 1),
+        )
+        df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
+        df = df.reset_index()
+        df = df.dropna(axis=1, how="all")
+        df.to_csv(
+            f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
+            index=False,
+        )
+
+        print("-------------------------------------")
+        print("One minute sleep during downloading from YF")
+        time.sleep(30)
+        # print("30 more seconds")
+        # time.sleep(30)
+        print("-------------------------------------")
+
+        for i in range(1, 5):
+            beginning = fifth_length_of_tickers * i
+            end = fifth_length_of_tickers * (i + 1)
+            for _ in range(beginning, end):
+                df = yf.download(
+                    tickers[beginning:end],
+                    group_by="Ticker",
+                    start=last_date,
+                    end=date(2025, 3, 1),
+                )
+                df = (
+                    df.stack(level=0)
+                    .rename_axis(["Date", "Ticker"])
+                    .reset_index(level=1)
+                )
+                df = df.reset_index()
+                df = df.dropna(axis=1, how="all")
+                df.to_csv(
+                    f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
+                    mode="a",
+                    index=False,
+                    header=False,
+                )
+
+                print("-------------------------------------")
+                print("One minute sleep during downloading from YF")
+                time.sleep(30)
+            # print("30 more seconds")
+            # time.sleep(30)
+            print("-------------------------------------")
+
+        if len(tickers) > fifth_length_of_tickers * 5:
+            print("last part")
+            for i in range(fifth_length_of_tickers * 5, len(tickers)):
+                df = yf.download(
+                    tickers[fifth_length_of_tickers * 5 :],
+                    group_by="Ticker",
+                    start=last_date,
+                    end=date(2025, 3, 1),
+                )
+                df = (
+                    df.stack(level=0)
+                    .rename_axis(["Date", "Ticker"])
+                    .reset_index(level=1)
+                )
+                df = df.reset_index()
+                df = df.dropna(axis=1, how="all")
+                df.to_csv(
+                    f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
+                    mode="a",
+                    index=False,
+                    header=False,
+                )
+
+        print("YF tickers downloaded")
+        print("YF API connection successful. Data downloaded.")
+    except Exception as e:
+        print(f"YF API connection failed: {e}", exc_info=True)
+
+
+# list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
+# print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
+list_of_tickers = [
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "AMZN",
+    "TSLA",
+    "FB",
+    "NVDA",
+    "PYPL",
+    "ADBE",
+    "INTC",
+    "CSCO",
+    "NFLX",
+]
+# specific_date = date(2025, 2, 27)
+# download_tickers_from_yf(list_of_tickers, specific_date)
