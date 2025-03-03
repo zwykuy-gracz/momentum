@@ -88,3 +88,4 @@ nasdaq_list_of_tickers = [
 #     HistoricalStockData.date == date(2025, 2, 3)
 # ).delete()
 # session.commit()
+
