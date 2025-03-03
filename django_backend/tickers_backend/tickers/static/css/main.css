@@ -1,0 +1,35 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: #151515 url("../assets/bkg.png") 0 0;
+  color: #eaeaea;
+  font-size: 16px;
+  line-height: 1.5;
+  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal,
+    monospace;
+}
+.container {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Space between tables */
+  margin: 20px;
+}
+.table-wrapper {
+  flex: 1; /* Equal width for both tables */
+  max-width: 45%; /* Limit width to prevent overlap */
+}
+table {
+  width: 80%;
+  margin: 20px auto;
+  border-collapse: collapse;
+}
+th,
+td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+.form-wrapper {
+  text-align: center;
+  margin: 20px 0;
+}

@@ -70,19 +70,6 @@ class StockData(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.close})>"
 
 
-# Not in use anymore TODO to be removed
-class TickersList10B(Base):
-    __tablename__ = "list_of_tickers_lt_10B"
-
-    id = Column(Integer, primary_key=True)
-    ticker = Column(String, nullable=False, index=True)
-    nasdaq_tickers = Column(String, nullable=False)
-    nyse_tickers = Column(String, nullable=False)
-
-    def __repr__(self):
-        return f"<StockPrice(ticker='{self.ticker}')>"
-
-
 class TickersList5B(Base):
     __tablename__ = "list_of_tickers_lt_5B"
 
@@ -98,10 +85,9 @@ class TickersList5B(Base):
 # downloads from YF and write DFs to files
 def download_tickers_from_yf(tickers, last_date):
     try:
-        half_length_of_tickers = len(tickers) // 2
-        third_length_of_tickers = len(tickers) // 3
+        fifth_length_of_tickers = len(tickers) // 5
         df = yf.download(
-            tickers[:third_length_of_tickers],
+            tickers[:fifth_length_of_tickers],
             group_by="Ticker",
             start=last_date,
             end=date.today(),
@@ -121,44 +107,49 @@ def download_tickers_from_yf(tickers, last_date):
         time.sleep(30)
         print("-------------------------------------")
 
-        df = yf.download(
-            tickers[third_length_of_tickers : third_length_of_tickers * 2],
-            group_by="Ticker",
-            start=last_date,
-            end=date.today(),
-        )
-        df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
-        df = df.reset_index()
-        df = df.dropna(axis=1, how="all")
-        df.to_csv(
-            f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
-            mode="a",
-            index=False,
-            header=False,
-        )
+        for i in range(1, 5):
+            beginning = fifth_length_of_tickers * i
+            end = fifth_length_of_tickers * (i + 1)
+            df = yf.download(
+                tickers[beginning:end],
+                group_by="Ticker",
+                start=last_date,
+                end=date.today(),
+            )
+            df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
+            df = df.reset_index()
+            df = df.dropna(axis=1, how="all")
+            df.to_csv(
+                f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
+                mode="a",
+                index=False,
+                header=False,
+            )
 
-        print("-------------------------------------")
-        print("One minute sleep during downloading from YF")
-        time.sleep(30)
-        print("30 more seconds")
-        time.sleep(30)
-        print("-------------------------------------")
+            print("-------------------------------------")
+            print("One minute sleep during downloading from YF")
+            time.sleep(30)
+            print("30 more seconds")
+            time.sleep(30)
+            print("-------------------------------------")
 
-        df = yf.download(
-            tickers[third_length_of_tickers * 2 :],
-            group_by="Ticker",
-            start=last_date,
-            end=date.today(),
-        )
-        df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
-        df = df.reset_index()
-        df = df.dropna(axis=1, how="all")
-        df.to_csv(
-            f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
-            mode="a",
-            index=False,
-            header=False,
-        )
+        if len(tickers) > fifth_length_of_tickers * 5:
+            print("last part")
+            df = yf.download(
+                tickers[fifth_length_of_tickers * 5 :],
+                group_by="Ticker",
+                start=last_date,
+                end=date.today(),
+            )
+            df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
+            df = df.reset_index()
+            df = df.dropna(axis=1, how="all")
+            df.to_csv(
+                f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
+                mode="a",
+                index=False,
+                header=False,
+            )
 
         print("YF tickers downloaded")
         logging.info("YF API connection successful. Data downloaded.")
