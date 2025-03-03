@@ -21,12 +21,15 @@ WORKFLOW:
 0. Download data for all Nasdaq and Nyse tickers from https://www.nasdaq.com/market-activity/stocks/screener
 1. Create DF with tickers and Market 
 2. Update market_cap in table list_of_tickers_lt_1B
-3. Select tickers with market_cap > 10B
-4. Delete all records from table list_of_tickers_lt_10B
-5. Populate table list_of_tickers_lt_10B with tickers with market_cap > 10B - copy from list_of_tickers_lt_1B
+3. Select tickers with market_cap > 5B
+4. Delete all records from table list_of_tickers_lt_5B
+5. Populate table list_of_tickers_lt_5B with tickers with market_cap > 5B - copy from list_of_tickers_lt_1B
 """
 
+# TODO Create table $5B
 
+
+# Not in use anymore
 class TickersList10B(Base):
     __tablename__ = "list_of_tickers_lt_10B"
 
@@ -34,6 +37,18 @@ class TickersList10B(Base):
     ticker = Column(String, nullable=False, index=True)
     nasdaq_tickers = Column(String, nullable=False)
     nyse_tickers = Column(String, nullable=False)
+
+    def __repr__(self):
+        return f"<StockPrice(ticker='{self.ticker}')>"
+
+
+class TickersList5B(Base):
+    __tablename__ = "list_of_tickers_lt_5B"
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String, nullable=False, index=True)
+    nasdaq_tickers = Column(Boolean, nullable=False)
+    nyse_tickers = Column(Boolean, nullable=False)
 
     def __repr__(self):
         return f"<StockPrice(ticker='{self.ticker}')>"
@@ -59,8 +74,8 @@ session = Session()
 
 
 def query_db_length_before():
-    query_result_10B = session.query(TickersList10B).all()
-    logging.info(f"Number of tickers lt 10B BEFORE`: {len(query_result_10B)}")
+    query_result_5B = session.query(TickersList5B).all()
+    logging.info(f"Number of tickers lt 5B BEFORE`: {len(query_result_5B)}")
 
 
 # Step 1: Create DF with tickers and Market Cap
@@ -87,52 +102,54 @@ def update_market_cap(df):
     logging.info("Market Caps updated")
 
 
-# Step 3: Select tickers with market_cap > 10B
-def select_lt_10B():
-    lt_10B = (
+# TODO this has to be modified until 5B MC reached
+# Step 3: Select tickers with market_cap > 5B
+def select_lt_5B():
+    lt_5B = (
         session.query(TickersList1B)
-        .filter(TickersList1B.market_cap > 10_000_000_000)
+        .filter(TickersList1B.market_cap > 9_000_000_000)
         .all()
     )
-    logging.info("Tickers with market_cap > 10B selected")
-    return lt_10B
+    logging.info("Tickers with market_cap > 9B selected")
+    return lt_5B
 
 
-# Step 4: Delete all records from table list_of_tickers_lt_10B
-def delete_lt_10B():
-    session.query(TickersList10B).delete()
+# Step 4: Delete all records from table list_of_tickers_lt_5B
+def delete_lt_5B():
+    session.query(TickersList5B).delete()
     session.commit()
     logging.info("All records deleted")
 
 
-# Step 5: Populate table list_of_tickers_lt_10B with tickers with market_cap > 10B - copy from list_of_tickers_lt_1B
-def populate_lt_10B(lt_10B):
-    for ticker in lt_10B:
-        stock_price = TickersList10B(
+# Step 5: Populate table list_of_tickers_lt_5B with tickers with market_cap > 5B - copy from list_of_tickers_lt_1B
+def populate_lt_5B(lt_5B):
+    for ticker in lt_5B:
+        stock_price = TickersList5B(
             ticker=ticker.ticker,
             nasdaq_tickers=ticker.nasdaq_tickers,
             nyse_tickers=ticker.nyse_tickers,
         )
         session.add(stock_price)
-    logging.info("Tickers with market_cap > 10B populated")
+    logging.info("Tickers with market_cap > 5B populated")
     session.commit()
 
 
 def query_db_length_after():
-    query_result_10B = session.query(TickersList10B).all()
-    logging.info(f"Number of tickers lt 10B AFTER: {len(query_result_10B)}")
+    query_result_5B = session.query(TickersList5B).all()
+    logging.info(f"Number of tickers lt 5B AFTER: {len(query_result_5B)}")
 
 
 def main():
-    logging.info("Starting weekly_10B_tickers_update.py")
+    logging.info("Starting weekly_5B_tickers_update.py")
     query_db_length_before()
     df_1B_ticker_MC = create_df_lt_1B("/home/paul/momentum/2025/nasdaq_screener_1740347841032.csv")
+    df_1B_ticker_MC = create_df_lt_1B("nasdaq_screener_1740916501821.csv")
     update_market_cap(df_1B_ticker_MC)
-    lt_10B_tickers = select_lt_10B()
-    delete_lt_10B()
-    populate_lt_10B(lt_10B_tickers)
+    lt_5B_tickers = select_lt_5B()
+    delete_lt_5B()
+    populate_lt_5B(lt_5B_tickers)
     query_db_length_after()
-    logging.info("weekly_10B_tickers_update.py finished")
+    logging.info("weekly_5B_tickers_update.py finished")
 
 
 if __name__ == "__main__":

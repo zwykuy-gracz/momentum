@@ -1,15 +1,19 @@
-from datetime import date, timedelta
-from sqlalchemy import (
-    create_engine,
-    Column,
-    Integer,
-    String,
-    Float,
-    Date,
-)
+from sqlalchemy import create_engine, Column, Integer, String, Float, Date, Boolean
 from sqlalchemy.orm import sessionmaker, declarative_base
+import logging
+import os
+import time
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from dotenv import load_dotenv
+
+load_dotenv()
+
+logging.basicConfig(
+    filename=os.getenv("LOG_FILE"),
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 
 Base = declarative_base()
 
@@ -26,7 +30,7 @@ class SourceData(Base):
         return f"<StockPrice(ticker='{self.ticker}', date='{self.date}', close={self.close})>"
 
 
-class StockData(Base):
+class MonthlyChange(Base):
     __tablename__ = "monthly_change"
 
     id = Column(Integer, primary_key=True)
@@ -38,12 +42,24 @@ class StockData(Base):
     twelve_months_change = Column(Float, nullable=True)
 
     def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
+        return f"<MonthlyChange(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
 
 
-# engine = create_engine(os.getenv("DB_STOCK_DATA"))
+class TickersList5B(Base):
+    __tablename__ = "list_of_tickers_lt_5B"
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String, nullable=False, index=True)
+    nasdaq_tickers = Column(Boolean, nullable=False)
+    nyse_tickers = Column(Boolean, nullable=False)
+
+    def __repr__(self):
+        return f"<StockPrice(ticker='{self.ticker}')>"
+
+
+engine = create_engine(os.getenv("DB_STOCK_DATA"))
 # engine = create_engine(os.getenv("DB_STOCK_DATA_BACKUP"))
-Base.metadata.create_all(engine)
+# Base.metadata.create_all(engine)
 
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -53,16 +69,16 @@ session = Session()
 
 def searching_for_last_working_day(no_months):
     format_string = "%Y-%m-%d %H:%M:%S"
-    # today = datetime.today()  # tutaj podać 0101
-    today = datetime(2025, 1, 1)
+    today = datetime.today()
+    # today = datetime(2025, 1, 1)
     X_months_ago = today - pd.DateOffset(months=no_months)
 
     last_day_of_X_months_ago = X_months_ago.date().replace(day=1) - timedelta(days=1)
 
-    week_no = last_day_of_X_months_ago.isoweekday()
-    if week_no == 7:
+    week_day_number = last_day_of_X_months_ago.isoweekday()
+    if week_day_number == 7:
         last_working_day = last_day_of_X_months_ago - pd.DateOffset(days=2)
-    elif week_no == 6:
+    elif week_day_number == 6:
         last_working_day = last_day_of_X_months_ago - pd.DateOffset(days=1)
         # timestamp_string = last_day_of_X_months_ago - pd.DateOffset(days=1)
         # last_working_day = datetime.strptime(timestamp_string, format_string)
@@ -89,14 +105,10 @@ def defining_last_working_days():
     ]
 
 
-# today = datetime.today()  # spr czy dzien > 1. np 30
-# last_traiding_day_of_previous_month = today.date().replace(day=1) - timedelta(
-#     days=1
-# )
-# TODO check for november returns
 def monthly_change(tickers, list_of_last_working_days):
+    print(f"Number of tickers: {len(tickers)}")
     calculated_rows = []
-    last_date = date(2025, 1, 17)
+    last_date = date(2025, 2, 28)
     for i, day in enumerate(list_of_last_working_days):
         print(day)
         for j, ticker in enumerate(tickers):
@@ -111,7 +123,6 @@ def monthly_change(tickers, list_of_last_working_days):
                     )
                     .first()
                 )
-                # print(day, last_day_data.ticker, last_day_data.close)
                 x_monts_ago_data = (
                     session.query(SourceData)
                     .filter(
@@ -127,7 +138,7 @@ def monthly_change(tickers, list_of_last_working_days):
                 ) * 100
                 if i == 0:
                     calculated_rows.append(
-                        StockData(
+                        MonthlyChange(
                             ticker=ticker,
                             date=last_date,
                             one_month_change=x_months_returns,
@@ -138,19 +149,19 @@ def monthly_change(tickers, list_of_last_working_days):
                     )
                 elif i == 1:
                     three_months_return = x_months_returns
-                    session.query(StockData).filter_by(
+                    session.query(MonthlyChange).filter_by(
                         ticker=ticker, date=last_date
                     ).update({"three_months_change": three_months_return})
                     session.commit()
                 elif i == 2:
                     six_months_return = x_months_returns
-                    session.query(StockData).filter_by(
+                    session.query(MonthlyChange).filter_by(
                         ticker=ticker, date=last_date
                     ).update({"six_months_change": six_months_return})
                     session.commit()
                 elif i == 3:
                     twelve_months_return = x_months_returns
-                    session.query(StockData).filter_by(
+                    session.query(MonthlyChange).filter_by(
                         ticker=ticker, date=last_date
                     ).update({"twelve_months_change": twelve_months_return})
                     session.commit()
@@ -164,19 +175,44 @@ def monthly_change(tickers, list_of_last_working_days):
             session.commit()
 
 
-# list_of_tickers =
-# list_of_last_working_days = defining_last_working_days()
+list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
+list_of_last_working_days = defining_last_working_days()
+print(list_of_last_working_days)
 # monthly_change(list_of_tickers, list_of_last_working_days)
 
-# today = datetime.today()
-# six_months_ago = today - pd.DateOffset(months=1)
 
-# last_day_of_prev_month = six_months_ago.date().replace(day=1) - timedelta(days=1)
+def manual_update(list_of_tickers):
+    for ticker in list_of_tickers:
+        try:
+            last_date = date(2025, 2, 28)
+            day = date(2024, 3, 28)
+            last_day_data = (
+                session.query(SourceData)
+                .filter(
+                    SourceData.ticker == ticker,
+                    SourceData.date == last_date,
+                )
+                .first()
+            )
+            x_monts_ago_data = (
+                session.query(SourceData)
+                .filter(
+                    SourceData.ticker == ticker,
+                    SourceData.date == day,
+                )
+                .first()
+            )
+            x_months_returns = (
+                (last_day_data.close - x_monts_ago_data.close) / x_monts_ago_data.close
+            ) * 100
 
-# print("Last day of prev month:", last_day_of_prev_month)
-# week_no = last_day_of_prev_month.isoweekday()
-# if week_no == 7:
-#     last_working_day = last_day_of_prev_month - pd.DateOffset(days=2)
-# elif week_no == 6:
-#     last_working_day = last_day_of_prev_month - pd.DateOffset(days=1)
-# print(f"last working day {last_working_day.date()}")
+            twelve_months_return = x_months_returns
+            session.query(MonthlyChange).filter_by(
+                ticker=ticker, date=last_date
+            ).update({"twelve_months_change": twelve_months_return})
+        except AttributeError:
+            print("Bad ticker:", ticker)
+    session.commit()
+
+
+manual_update(list_of_tickers)

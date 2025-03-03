@@ -70,13 +70,13 @@ class StockData(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.close})>"
 
 
-class TickersList10B(Base):
-    __tablename__ = "list_of_tickers_lt_10B"
+class TickersList5B(Base):
+    __tablename__ = "list_of_tickers_lt_5B"
 
     id = Column(Integer, primary_key=True)
     ticker = Column(String, nullable=False, index=True)
-    nasdaq_tickers = Column(String, nullable=False)
-    nyse_tickers = Column(String, nullable=False)
+    nasdaq_tickers = Column(Boolean, nullable=False)
+    nyse_tickers = Column(Boolean, nullable=False)
 
     def __repr__(self):
         return f"<StockPrice(ticker='{self.ticker}')>"
@@ -85,10 +85,9 @@ class TickersList10B(Base):
 # downloads from YF and write DFs to files
 def download_tickers_from_yf(tickers, last_date):
     try:
-        half_length_of_tickers = len(tickers) // 2
-        third_length_of_tickers = len(tickers) // 3
+        fifth_length_of_tickers = len(tickers) // 5
         df = yf.download(
-            tickers[:third_length_of_tickers],
+            tickers[:fifth_length_of_tickers],
             group_by="Ticker",
             start=last_date,
             end=date.today(),
@@ -108,44 +107,49 @@ def download_tickers_from_yf(tickers, last_date):
         time.sleep(30)
         print("-------------------------------------")
 
-        df = yf.download(
-            tickers[third_length_of_tickers : third_length_of_tickers * 2],
-            group_by="Ticker",
-            start=last_date,
-            end=date.today(),
-        )
-        df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
-        df = df.reset_index()
-        df = df.dropna(axis=1, how="all")
-        df.to_csv(
-            f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
-            mode="a",
-            index=False,
-            header=False,
-        )
+        for i in range(1, 5):
+            beginning = fifth_length_of_tickers * i
+            end = fifth_length_of_tickers * (i + 1)
+            df = yf.download(
+                tickers[beginning:end],
+                group_by="Ticker",
+                start=last_date,
+                end=date.today(),
+            )
+            df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
+            df = df.reset_index()
+            df = df.dropna(axis=1, how="all")
+            df.to_csv(
+                f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
+                mode="a",
+                index=False,
+                header=False,
+            )
 
-        print("-------------------------------------")
-        print("One minute sleep during downloading from YF")
-        time.sleep(30)
-        print("30 more seconds")
-        time.sleep(30)
-        print("-------------------------------------")
+            print("-------------------------------------")
+            print("One minute sleep during downloading from YF")
+            time.sleep(30)
+            print("30 more seconds")
+            time.sleep(30)
+            print("-------------------------------------")
 
-        df = yf.download(
-            tickers[third_length_of_tickers * 2 :],
-            group_by="Ticker",
-            start=last_date,
-            end=date.today(),
-        )
-        df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
-        df = df.reset_index()
-        df = df.dropna(axis=1, how="all")
-        df.to_csv(
-            f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
-            mode="a",
-            index=False,
-            header=False,
-        )
+        if len(tickers) > fifth_length_of_tickers * 5:
+            print("last part")
+            df = yf.download(
+                tickers[fifth_length_of_tickers * 5 :],
+                group_by="Ticker",
+                start=last_date,
+                end=date.today(),
+            )
+            df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
+            df = df.reset_index()
+            df = df.dropna(axis=1, how="all")
+            df.to_csv(
+                f"{os.getenv('CSV_FOLDER_PATH')}/{str(last_date).replace('-', '')}.csv",
+                mode="a",
+                index=False,
+                header=False,
+            )
 
         print("YF tickers downloaded")
         logging.info("YF API connection successful. Data downloaded.")
@@ -265,14 +269,12 @@ def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
     logging.info("Nasdaq SMAa calculations started.")
     nasdaq_list_of_tickers = [
         t.ticker
-        for t in session.query(TickersList10B)
-        .filter(TickersList10B.nasdaq_tickers == True)
+        for t in session.query(TickersList5B)
+        .filter(TickersList5B.nasdaq_tickers == True)
         .all()
     ]
-    for i, ticker in enumerate(nasdaq_list_of_tickers):
-        time.sleep(0.1)
-        if i % 50 == 0:
-            print("Nasdaq", i)
+    for ticker in nasdaq_list_of_tickers:
+        time.sleep(0.15)
         try:
             stock_ticker = TA_Handler(
                 symbol=ticker,
@@ -305,14 +307,12 @@ def nyse_counting_and_populating_DB_with_SMAs(last_date):
     logging.info("Nyse SMAa calculations started.")
     nyse_list_of_tickers = [
         t.ticker
-        for t in session.query(TickersList10B)
-        .filter(TickersList10B.nyse_tickers == True)
+        for t in session.query(TickersList5B)
+        .filter(TickersList5B.nyse_tickers == True)
         .all()
     ]
-    for i, ticker in enumerate(nyse_list_of_tickers):
-        time.sleep(0.1)
-        if i % 50 == 0:
-            print("Nyse", i)
+    for ticker in nyse_list_of_tickers:
+        time.sleep(0.15)
         try:
             stock_ticker = TA_Handler(
                 symbol=ticker,
@@ -411,7 +411,7 @@ def main():
         previous_day = date.today() - timedelta(days=1)
         print(f"Working on date: {previous_day}")
         logging.info(f"Working on date: {previous_day}")
-        list_of_tickers = [t.ticker for t in session.query(TickersList10B).all()]
+        list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
         logging.info(
             f"Created list of tickers from DB with length: {len(list_of_tickers)}"
         )
@@ -423,7 +423,7 @@ def main():
             counting_and_populating_ytd_0805_1105_return(list_of_tickers, previous_day)
 
             nasdaq_counting_and_populating_DB_with_SMAs(previous_day)
-            # It takes about 173 sec
+            # It takes about 270 sec
             nyse_counting_and_populating_DB_with_SMAs(previous_day)
 
             check_above_below_sma(list_of_tickers, previous_day)

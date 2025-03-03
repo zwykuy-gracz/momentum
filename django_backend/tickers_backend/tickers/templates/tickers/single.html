@@ -1,0 +1,11 @@
+{% extends "tickers/base.html" %} {% block content %}
+<h1>Single stock screener</h1>
+<a href="{% url 'home' %}">Back to main page</a>
+<div class="container">
+  <!-- Best YTD Returns -->
+  <div class="table-wrapper">
+    <h2>Single ticker page</h2>
+    <h3>Nvidia $NVDA</h3>
+    YTD return: {{ last_working_day }} {% endblock content %}
+  </div>
+</div>
