@@ -37,35 +37,43 @@ holidays = [
     "2025-11-27",
     "2025-12-25",
 ]
-from datetime import datetime, timedelta
+
+# date = datetime.today() - timedelta(days=i)
+
+specific_date = date(2025, 2, 28)
 
 
 def last_working_day():
-    previous_day = (datetime.today() - timedelta(days=1)).strftime("%A")
+    previous_day = datetime.today() - timedelta(days=1)
     i = 1
     while True:
-        if previous_day in working_days:
+        if previous_day.strftime("%A") in working_days:
             print(1, previous_day)
-            date = datetime.today() - timedelta(days=i)
-            ytd_stock = StockData.objects.filter(date=date, ticker="NVDA").first()
+            yesterday_stock_data = StockData.objects.filter(
+                date=specific_date, ticker="NVDA"
+            ).first()
             break
         else:
             i += 1
             print(2, previous_day)
             previous_day = (datetime.today() - timedelta(days=i)).strftime("%A")
 
-    year_ago = date - timedelta(days=365)
-    i = 1
+    return yesterday_stock_data
+
+
+def year_ago_data():
+    n = 365
+    year_ago = specific_date - timedelta(days=n)
     while True:
-        if year_ago in working_days:
+        if year_ago.strftime("%A") in working_days:
             print(3, year_ago)
-            date = datetime.today() - timedelta(days=i)
-            ytd_stock = StockData.objects.filter(date=date, ticker="NVDA").first()
+            year_ago_stock_data = StockData.objects.filter(
+                date=year_ago, ticker="NVDA"
+            ).first()
             break
         else:
-            i += 1
-            print(2, previous_day)
-            previous_day = (datetime.today() - timedelta(days=i)).strftime("%A")
+            n += 1
+            print(4, year_ago)
+            year_ago = specific_date - timedelta(days=n)
 
-    print(year_ago)
-    return year_ago
+    return year_ago_stock_data

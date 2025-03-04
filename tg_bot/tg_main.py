@@ -30,8 +30,8 @@ logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 
-class TickersList10B(Base):
-    __tablename__ = "list_of_tickers_lt_10B"
+class TickersList5B(Base):
+    __tablename__ = "list_of_tickers_lt_5B"
 
     id = Column(Integer, primary_key=True)
     ticker = Column(String, nullable=False, index=True)

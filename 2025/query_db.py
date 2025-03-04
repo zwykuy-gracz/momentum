@@ -118,12 +118,11 @@ def create_df_lt_1B(filename):
 # print(len(df_1B_ticker_MC))
 
 
-# for i in range(5):
-#     beginning = fifth * i
-#     end = fifth * (i + 1)
-#     for _ in range(beginning, end):
-#         print(f"{beginning}, {end}", i)
-# print("---")
-# if n > fifth * 5:
-#     for i in range(fifth * 5, n):
-#         print(f"{fifth * 5}, {n}", i)
+import calendar
+
+
+def last_business_day_in_month(year: int, month: int) -> int:
+    return max(calendar.monthcalendar(year, month)[-1][:5])
+
+
+print(1, last_business_day_in_month(2025, 1))
