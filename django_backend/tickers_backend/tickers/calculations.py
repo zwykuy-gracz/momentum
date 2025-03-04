@@ -1,5 +1,25 @@
-from .models import YtdBest, YtdWorst, StockData
+from .models import YtdBest, YtdWorst, StockData, Momentum123, Momentum62, MonthlyChange
 from datetime import date, datetime, timedelta
+import pandas as pd
+
+
+def searching_for_last_working_day():
+    today = datetime.today()
+
+    last_day_month_ago = today.replace(day=1) - timedelta(days=1)
+
+    week_day_number = last_day_month_ago.isoweekday()
+    if week_day_number == 7:
+        last_working_day = last_day_month_ago - pd.DateOffset(days=2)
+    elif week_day_number == 6:
+        last_working_day = last_day_month_ago - pd.DateOffset(days=1)
+    else:
+        last_working_day = last_day_month_ago
+
+    return last_working_day.strftime("%Y-%m-%d")
+
+
+last_working_day_previous_month = searching_for_last_working_day()
 
 
 def get_best_ytd():
@@ -9,7 +29,6 @@ def get_best_ytd():
         ytd_best.append(
             {"date": stock.date, "ticker": stock.ticker, "pct_change": stock.pct_change}
         )
-
     return ytd_best
 
 
@@ -20,8 +39,45 @@ def get_worst_ytd():
         ytd_worst.append(
             {"date": stock.date, "ticker": stock.ticker, "pct_change": stock.pct_change}
         )
-
     return ytd_worst
+
+
+def get_momentum_12_3():
+    stocks = Momentum123.objects.filter(date=last_working_day_previous_month)[:10]
+    momentum_12_3 = []
+    for stock in stocks:
+        momentum_12_3.append(
+            {
+                "date": stock.date,
+                "ticker": stock.ticker,
+                "pct_change": stock.pct_change,
+                "twelve_months_change": MonthlyChange.objects.filter(
+                    date=stock.date, ticker=stock.ticker
+                )
+                .first()
+                .twelve_months_change,
+            }
+        )
+    return momentum_12_3
+
+
+def get_momentum_6_2():
+    stocks = Momentum62.objects.filter(date=last_working_day_previous_month)[:10]
+    momentum_6_2 = []
+    for stock in stocks:
+        momentum_6_2.append(
+            {
+                "date": stock.date,
+                "ticker": stock.ticker,
+                "pct_change": stock.pct_change,
+                "six_months_change": MonthlyChange.objects.filter(
+                    date=stock.date, ticker=stock.ticker
+                )
+                .first()
+                .six_months_change,
+            }
+        )
+    return momentum_6_2
 
 
 working_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]

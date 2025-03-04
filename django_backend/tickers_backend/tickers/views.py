@@ -1,12 +1,28 @@
 from django.http import HttpResponse
 from django.shortcuts import render
-from .calculations import get_best_ytd, get_worst_ytd, last_working_day, year_ago_data
+from .calculations import (
+    get_best_ytd,
+    get_worst_ytd,
+    last_working_day,
+    year_ago_data,
+    get_momentum_12_3,
+    get_momentum_6_2,
+    last_working_day_previous_month,
+)
 
 
 def home(request):
     ytd_best = get_best_ytd
     ytd_worst = get_worst_ytd
-    context = {"ytd_best": ytd_best, "ytd_worst": ytd_worst}
+    momentum_12_3 = get_momentum_12_3
+    momentum_6_2 = get_momentum_6_2
+    context = {
+        "ytd_best": ytd_best,
+        "ytd_worst": ytd_worst,
+        "momentum_12_3": momentum_12_3,
+        "momentum_6_2": momentum_6_2,
+        "last_working_day_previous_month": last_working_day_previous_month,
+    }
     return render(request, "tickers/index.html", context=context)
 
 
