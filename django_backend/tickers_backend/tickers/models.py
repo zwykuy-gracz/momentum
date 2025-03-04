@@ -34,17 +34,6 @@ class August05Worst(models.Model):
         db_table = "august05_worst"
 
 
-# NOT IN USE. TODO remove this table
-class ListOfTickers(models.Model):
-    ticker = models.CharField(max_length=20)
-    nasdaq_tickers = models.CharField(max_length=20)
-    nyse_tickers = models.CharField(max_length=20)
-
-    class Meta:
-        managed = False
-        db_table = "list_of_tickers"
-
-
 class ListOfTickersLt10B(models.Model):
     id = models.AutoField(primary_key=True)
     ticker = models.CharField(max_length=20)
@@ -68,6 +57,66 @@ class ListOfTickersLt1B(models.Model):
         db_table = "list_of_tickers_lt_1B"
 
 
+class ListOfTickersLt5B(models.Model):
+    id = models.AutoField(primary_key=True)
+    ticker = models.CharField(max_length=20)
+    nasdaq_tickers = models.BooleanField()
+    nyse_tickers = models.BooleanField()
+
+    class Meta:
+        managed = False
+        db_table = "list_of_tickers_lt_5B"
+
+
+class MarketBreadth(models.Model):
+    date = models.DateField()
+    ma50_number_of_stocks_above = models.IntegerField(blank=True, null=True)
+    ma50_number_of_stocks_below = models.IntegerField(blank=True, null=True)
+    ma50_pct_of_stocks_above = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    ma100_number_of_stocks_above = models.IntegerField(blank=True, null=True)
+    ma100_number_of_stocks_below = models.IntegerField(blank=True, null=True)
+    ma100_pct_of_stocks_above = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    ma200_number_of_stocks_above = models.IntegerField(blank=True, null=True)
+    ma200_number_of_stocks_below = models.IntegerField(blank=True, null=True)
+    ma200_pct_of_stocks_above = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+
+    class Meta:
+        managed = False
+        db_table = "market_breadth"
+
+
+class Momentum123(models.Model):
+    id = models.AutoField(primary_key=True)
+    date = models.DateField()
+    ticker = models.CharField(max_length=20)
+    pct_change = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+
+    class Meta:
+        managed = False
+        db_table = "momentum_12_3"
+
+
+class Momentum62(models.Model):
+    id = models.AutoField(primary_key=True)
+    date = models.DateField()
+    ticker = models.CharField(max_length=20)
+    pct_change = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+
+    class Meta:
+        managed = False
+        db_table = "momentum_6_2"
+
+
 class MonthlyChange(models.Model):
     id = models.AutoField(primary_key=True)
     date = models.DateField()
@@ -82,6 +131,9 @@ class MonthlyChange(models.Model):
         max_digits=10, decimal_places=2, blank=True, null=True
     )
     twelve_months_change = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    two_months_change = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, null=True
     )
 
