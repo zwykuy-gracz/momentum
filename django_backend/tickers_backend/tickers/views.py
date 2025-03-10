@@ -1,12 +1,17 @@
 from django.http import HttpResponse
 from django.shortcuts import render
+from datetime import date, datetime, timedelta
+from .models import StockData
 from .calculations import (
     get_best_ytd,
     get_worst_ytd,
     last_working_day,
+    previous_working_day_data,
     year_ago_data,
     get_momentum_12_3,
     get_momentum_6_2,
+    list_of_fridays,
+    list_of_weekly_changes,
     last_working_day_previous_month,
 )
 
@@ -37,10 +42,13 @@ from io import StringIO, BytesIO
 def chart_view(request):
     plt.style.use("dark_background")
     fig, ax = plt.subplots()
-    ax.plot([1, 2, 3], [4, 5, 6], label="Sample Data", color="cyan")
-    ax.set_title("Dynamic Chart")
-    ax.set_xlabel("X Axis")
-    ax.set_ylabel("Y Axis")
+    ax.bar(list_of_fridays, list_of_weekly_changes, label="Sample Data")
+    ax.set_title("Weekly Changes")
+    ax.set_xlabel("EOW date")
+    ax.set_ylabel("Percentage Change")
+    ax.set_xticks(list_of_fridays[::])
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
+    ax.grid(True, linestyle="--", alpha=0.7)
     ax.legend()
 
     # Save the plot to an in-memory buffer
@@ -53,19 +61,30 @@ def chart_view(request):
     return HttpResponse(buf.getvalue(), content_type="image/png")
 
 
-def index_view(request):
-    # Simple HTML template to display the chart
-    return HttpResponse(
-        """
-    <h1>Dynamic Matplotlib Chart</h1>
-    <img src="/chart/" alt="Dynamic Chart">
-    """
-    )
-
-
 def single_ticker(request):
+    ticker_data = None
+    ticker_input = ""
+    if request.method == "POST":
+        ticker_input = request.POST.get("ticker", "").upper()
+        stock = StockData.objects.filter(
+            ticker=ticker_input, date=date.today() - timedelta(days=1)
+        ).first()
+        last_close = previous_working_day_data(last_working_day, ticker_input)
+        year_ago_close = year_ago_data(last_working_day, ticker_input)
+        one_year_return = (
+            (last_close.close - year_ago_close.close) / year_ago_close.close * 100
+        )
+        if stock:
+            ticker_data = {
+                "date": stock.date,
+                "ticker": stock.ticker,
+                "price": stock.close,
+                "ytd_return": stock.ytd,
+            }
     context = {
-        "last_working_day": last_working_day,
-        "year_ago_data": year_ago_data,
+        "last_working_day": last_close,
+        "one_year_return": one_year_return,
+        "ticker_data": ticker_data,
+        "ticker_input": ticker_input,
     }
     return render(request, "tickers/single.html", context=context)

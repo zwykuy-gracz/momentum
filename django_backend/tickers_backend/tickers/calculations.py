@@ -99,37 +99,71 @@ holidays = [
 specific_date = date(2025, 2, 28)
 
 
-def last_working_day():
+def previous_working_day():
     previous_day = datetime.today() - timedelta(days=1)
     i = 1
     while True:
         if previous_day.strftime("%A") in working_days:
-            print(1, previous_day)
+            return previous_day
+        else:
+            i += 1
+            previous_day = (datetime.today() - timedelta(days=i)).strftime("%A")
+
+
+def previous_working_day_data(last_day, symbol):
+    i = 1
+    while True:
+        if last_day.strftime("%A") in working_days:
             yesterday_stock_data = StockData.objects.filter(
-                date=specific_date, ticker="NVDA"
+                date=last_day, ticker=f"{symbol}"
             ).first()
             break
         else:
             i += 1
-            print(2, previous_day)
-            previous_day = (datetime.today() - timedelta(days=i)).strftime("%A")
+            last_day = (datetime.today() - timedelta(days=i)).strftime("%A")
 
     return yesterday_stock_data
 
 
-def year_ago_data():
+def year_ago_data(last_day, symbol):
     n = 365
-    year_ago = specific_date - timedelta(days=n)
+    year_ago = last_day - timedelta(days=n)
     while True:
         if year_ago.strftime("%A") in working_days:
-            print(3, year_ago)
             year_ago_stock_data = StockData.objects.filter(
-                date=year_ago, ticker="NVDA"
+                date=year_ago, ticker=f"{symbol}"
             ).first()
             break
         else:
             n += 1
-            print(4, year_ago)
-            year_ago = specific_date - timedelta(days=n)
+            year_ago = last_day - timedelta(days=n)
 
     return year_ago_stock_data
+
+
+def get_list_of_weekly_change_dates():
+    start_date = date(2025, 1, 24)
+    lst_dates = []
+    while start_date < date.today():
+        lst_dates.append(start_date)
+        start_date += timedelta(days=7)
+    return lst_dates
+
+
+def get_weekly_change(list_of_fridays):
+    ticker = "NVDA"
+    weekly_change = []
+    for date in list_of_fridays:
+        weekly_change.append(
+            StockData.objects.filter(date=date, ticker=ticker).first().weekly_change
+        )
+    return weekly_change
+
+
+list_of_fridays = get_list_of_weekly_change_dates()
+list_of_weekly_changes = get_weekly_change(list_of_fridays)
+
+last_working_day = previous_working_day()
+# last_close = previous_working_day_data(last_working_day)
+# year_ago_close = year_ago_data()
+# one_year_return = (last_close.close - year_ago_close.close) / year_ago_close.close * 100

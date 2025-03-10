@@ -296,4 +296,4 @@ for _, row in sorted_2m_df.iterrows():
 # session.commit()
 # session.close()
 
-# TODO: migrations in django
+# TODO: find all weekly change - since when. Add user input ticker and chart weekly change
