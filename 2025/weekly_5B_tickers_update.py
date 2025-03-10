@@ -128,6 +128,7 @@ def main():
     logging.info("Starting weekly_5B_tickers_update.py")
     query_db_length_before()
     df_1B_ticker_MC = create_df_lt_1B("/home/paul/momentum/2025/nasdaq_screener_1741619172852.csv")
+    #df_1B_ticker_MC = create_df_lt_1B("nasdaq_screener_1741619172852.csv")
     update_market_cap(df_1B_ticker_MC)
     lt_5B_tickers = select_lt_5B()
     delete_lt_5B()
