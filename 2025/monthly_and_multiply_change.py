@@ -4,6 +4,7 @@ import logging
 import os
 import time
 import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta, date
 from dotenv import load_dotenv
 
@@ -40,9 +41,34 @@ class MonthlyChange(Base):
     three_months_change = Column(Float, nullable=True)
     six_months_change = Column(Float, nullable=True)
     twelve_months_change = Column(Float, nullable=True)
+    two_months_change = Column(Float, nullable=True)
 
     def __repr__(self):
         return f"<MonthlyChange(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
+
+
+class Momentum_12_3(Base):
+    __tablename__ = "momentum_12_3"
+
+    id = Column(Integer, primary_key=True)
+    date = Column(Date, nullable=False)
+    ticker = Column(String, nullable=False, index=True)
+    pct_change = Column(Float, nullable=True)
+
+    def __repr__(self):
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.november05_best})>"
+
+
+class Momentum_6_2(Base):
+    __tablename__ = "momentum_6_2"
+
+    id = Column(Integer, primary_key=True)
+    date = Column(Date, nullable=False)
+    ticker = Column(String, nullable=False, index=True)
+    pct_change = Column(Float, nullable=True)
+
+    def __repr__(self):
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.november05_worst})>"
 
 
 class TickersList5B(Base):
@@ -59,7 +85,7 @@ class TickersList5B(Base):
 
 engine = create_engine(os.getenv("DB_STOCK_DATA"))
 # engine = create_engine(os.getenv("DB_STOCK_DATA_BACKUP"))
-# Base.metadata.create_all(engine)
+Base.metadata.create_all(engine)
 
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -176,8 +202,8 @@ def monthly_change(tickers, list_of_last_working_days):
 
 
 list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
-list_of_last_working_days = defining_last_working_days()
-print(list_of_last_working_days)
+# list_of_last_working_days = defining_last_working_days()
+# print(list_of_last_working_days)
 # monthly_change(list_of_tickers, list_of_last_working_days)
 
 
@@ -185,7 +211,7 @@ def manual_update(list_of_tickers):
     for ticker in list_of_tickers:
         try:
             last_date = date(2025, 2, 28)
-            day = date(2024, 3, 28)
+            day = date(2024, 12, 31)
             last_day_data = (
                 session.query(SourceData)
                 .filter(
@@ -206,13 +232,68 @@ def manual_update(list_of_tickers):
                 (last_day_data.close - x_monts_ago_data.close) / x_monts_ago_data.close
             ) * 100
 
-            twelve_months_return = x_months_returns
+            two_months_return = x_months_returns
             session.query(MonthlyChange).filter_by(
                 ticker=ticker, date=last_date
-            ).update({"twelve_months_change": twelve_months_return})
+            ).update({"two_months_change": two_months_return})
         except AttributeError:
             print("Bad ticker:", ticker)
     session.commit()
 
 
-manual_update(list_of_tickers)
+# manual_update(list_of_tickers)
+
+specific_date = date(2025, 2, 28)
+query_result = (
+    session.query(
+        MonthlyChange.date,
+        MonthlyChange.ticker,
+        MonthlyChange.two_months_change,
+        MonthlyChange.three_months_change,
+        MonthlyChange.six_months_change,
+        MonthlyChange.twelve_months_change,
+    )
+    .filter(MonthlyChange.date == specific_date)
+    .all()
+)
+
+df = pd.DataFrame(query_result, columns=["date", "ticker", "2m", "3m", "6m", "12m"])
+df["date"] = pd.to_datetime(df["date"]).dt.date
+df = df.dropna()
+# df.set_index("date", inplace=True)
+
+df_6m_top100 = df.nlargest(100, "6m")
+df_12m_top100 = df.nlargest(100, "12m")
+tickers_6m_top100 = df_6m_top100["ticker"].tolist()
+tickers_12m_top100 = df_12m_top100["ticker"].tolist()
+
+for t in tickers_12m_top100:
+    filtered_3m_df = df[df["ticker"].isin(tickers_12m_top100)][["date", "ticker", "3m"]]
+
+for t in tickers_6m_top100:
+    filtered_2m_df = df[df["ticker"].isin(tickers_6m_top100)][["date", "ticker", "2m"]]
+
+
+sorted_3m_df = filtered_3m_df.sort_values(by="3m", ascending=False).head(20)
+sorted_2m_df = filtered_2m_df.sort_values(by="2m", ascending=False).head(20)
+
+for _, row in sorted_3m_df.iterrows():
+    stock_data = Momentum_12_3(
+        date=row["date"],
+        ticker=row["ticker"],
+        pct_change=row["3m"],
+    )
+    session.add(stock_data)
+
+for _, row in sorted_2m_df.iterrows():
+    stock_data = Momentum_6_2(
+        date=row["date"],
+        ticker=row["ticker"],
+        pct_change=row["2m"],
+    )
+    session.add(stock_data)
+
+# session.commit()
+# session.close()
+
+# TODO: find all weekly change - since when. Add user input ticker and chart weekly change

@@ -1,5 +1,25 @@
-from .models import YtdBest, YtdWorst, StockData
+from .models import YtdBest, YtdWorst, StockData, Momentum123, Momentum62, MonthlyChange
 from datetime import date, datetime, timedelta
+import pandas as pd
+
+
+def searching_for_last_working_day():
+    today = datetime.today()
+
+    last_day_month_ago = today.replace(day=1) - timedelta(days=1)
+
+    week_day_number = last_day_month_ago.isoweekday()
+    if week_day_number == 7:
+        last_working_day = last_day_month_ago - pd.DateOffset(days=2)
+    elif week_day_number == 6:
+        last_working_day = last_day_month_ago - pd.DateOffset(days=1)
+    else:
+        last_working_day = last_day_month_ago
+
+    return last_working_day.strftime("%Y-%m-%d")
+
+
+last_working_day_previous_month = searching_for_last_working_day()
 
 
 def get_best_ytd():
@@ -9,7 +29,6 @@ def get_best_ytd():
         ytd_best.append(
             {"date": stock.date, "ticker": stock.ticker, "pct_change": stock.pct_change}
         )
-
     return ytd_best
 
 
@@ -20,8 +39,45 @@ def get_worst_ytd():
         ytd_worst.append(
             {"date": stock.date, "ticker": stock.ticker, "pct_change": stock.pct_change}
         )
-
     return ytd_worst
+
+
+def get_momentum_12_3():
+    stocks = Momentum123.objects.filter(date=last_working_day_previous_month)[:10]
+    momentum_12_3 = []
+    for stock in stocks:
+        momentum_12_3.append(
+            {
+                "date": stock.date,
+                "ticker": stock.ticker,
+                "pct_change": stock.pct_change,
+                "twelve_months_change": MonthlyChange.objects.filter(
+                    date=stock.date, ticker=stock.ticker
+                )
+                .first()
+                .twelve_months_change,
+            }
+        )
+    return momentum_12_3
+
+
+def get_momentum_6_2():
+    stocks = Momentum62.objects.filter(date=last_working_day_previous_month)[:10]
+    momentum_6_2 = []
+    for stock in stocks:
+        momentum_6_2.append(
+            {
+                "date": stock.date,
+                "ticker": stock.ticker,
+                "pct_change": stock.pct_change,
+                "six_months_change": MonthlyChange.objects.filter(
+                    date=stock.date, ticker=stock.ticker
+                )
+                .first()
+                .six_months_change,
+            }
+        )
+    return momentum_6_2
 
 
 working_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
@@ -37,35 +93,77 @@ holidays = [
     "2025-11-27",
     "2025-12-25",
 ]
-from datetime import datetime, timedelta
+
+# date = datetime.today() - timedelta(days=i)
+
+specific_date = date(2025, 2, 28)
 
 
-def last_working_day():
-    previous_day = (datetime.today() - timedelta(days=1)).strftime("%A")
+def previous_working_day():
+    previous_day = datetime.today() - timedelta(days=1)
     i = 1
     while True:
-        if previous_day in working_days:
-            print(1, previous_day)
-            date = datetime.today() - timedelta(days=i)
-            ytd_stock = StockData.objects.filter(date=date, ticker="NVDA").first()
+        if previous_day.strftime("%A") in working_days:
+            return previous_day
+        else:
+            i += 1
+            previous_day = (datetime.today() - timedelta(days=i)).strftime("%A")
+
+
+def previous_working_day_data(last_day, symbol):
+    i = 1
+    while True:
+        if last_day.strftime("%A") in working_days:
+            yesterday_stock_data = StockData.objects.filter(
+                date=last_day, ticker=f"{symbol}"
+            ).first()
             break
         else:
             i += 1
-            print(2, previous_day)
-            previous_day = (datetime.today() - timedelta(days=i)).strftime("%A")
+            last_day = (datetime.today() - timedelta(days=i)).strftime("%A")
 
-    year_ago = date - timedelta(days=365)
-    i = 1
+    return yesterday_stock_data
+
+
+def year_ago_data(last_day, symbol):
+    n = 365
+    year_ago = last_day - timedelta(days=n)
     while True:
-        if year_ago in working_days:
-            print(3, year_ago)
-            date = datetime.today() - timedelta(days=i)
-            ytd_stock = StockData.objects.filter(date=date, ticker="NVDA").first()
+        if year_ago.strftime("%A") in working_days:
+            year_ago_stock_data = StockData.objects.filter(
+                date=year_ago, ticker=f"{symbol}"
+            ).first()
             break
         else:
-            i += 1
-            print(2, previous_day)
-            previous_day = (datetime.today() - timedelta(days=i)).strftime("%A")
+            n += 1
+            year_ago = last_day - timedelta(days=n)
 
-    print(year_ago)
-    return year_ago
+    return year_ago_stock_data
+
+
+def get_list_of_weekly_change_dates():
+    start_date = date(2025, 1, 24)
+    lst_dates = []
+    while start_date < date.today():
+        lst_dates.append(start_date)
+        start_date += timedelta(days=7)
+    return lst_dates
+
+
+def get_weekly_change(list_of_fridays):
+    ticker = "NVDA"
+    weekly_change = []
+    for date in list_of_fridays:
+        weekly_change.append(
+            StockData.objects.filter(date=date, ticker=ticker).first().weekly_change
+        )
+    return weekly_change
+
+
+list_of_fridays = get_list_of_weekly_change_dates()
+list_of_weekly_changes = get_weekly_change(list_of_fridays)
+
+last_working_day = previous_working_day()
+# last_close = previous_working_day_data(last_working_day)
+# year_ago_close = year_ago_data()
+# one_year_return = (last_close.close - year_ago_close.close) / year_ago_close.close * 100

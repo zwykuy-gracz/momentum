@@ -26,21 +26,6 @@ WORKFLOW:
 5. Populate table list_of_tickers_lt_5B with tickers with market_cap > 5B - copy from list_of_tickers_lt_1B
 """
 
-# TODO Create table $5B
-
-
-# Not in use anymore
-class TickersList10B(Base):
-    __tablename__ = "list_of_tickers_lt_10B"
-
-    id = Column(Integer, primary_key=True)
-    ticker = Column(String, nullable=False, index=True)
-    nasdaq_tickers = Column(String, nullable=False)
-    nyse_tickers = Column(String, nullable=False)
-
-    def __repr__(self):
-        return f"<StockPrice(ticker='{self.ticker}')>"
-
 
 class TickersList5B(Base):
     __tablename__ = "list_of_tickers_lt_5B"
@@ -68,7 +53,7 @@ class TickersList1B(Base):
 
 
 engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
-Base.metadata.create_all(engine)
+# Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -107,10 +92,10 @@ def update_market_cap(df):
 def select_lt_5B():
     lt_5B = (
         session.query(TickersList1B)
-        .filter(TickersList1B.market_cap > 9_000_000_000)
+        .filter(TickersList1B.market_cap > 8_000_000_000)
         .all()
     )
-    logging.info("Tickers with market_cap > 9B selected")
+    logging.info("Tickers with market_cap > 5B selected")
     return lt_5B
 
 
@@ -142,8 +127,7 @@ def query_db_length_after():
 def main():
     logging.info("Starting weekly_5B_tickers_update.py")
     query_db_length_before()
-    df_1B_ticker_MC = create_df_lt_1B("/home/paul/momentum/2025/nasdaq_screener_1740347841032.csv")
-    df_1B_ticker_MC = create_df_lt_1B("nasdaq_screener_1740916501821.csv")
+    df_1B_ticker_MC = create_df_lt_1B("/home/paul/momentum/2025/nasdaq_screener_1741619172852.csv")
     update_market_cap(df_1B_ticker_MC)
     lt_5B_tickers = select_lt_5B()
     delete_lt_5B()

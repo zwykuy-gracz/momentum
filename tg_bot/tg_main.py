@@ -30,8 +30,8 @@ logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 
-class TickersList10B(Base):
-    __tablename__ = "list_of_tickers_lt_10B"
+class TickersList5B(Base):
+    __tablename__ = "list_of_tickers_lt_5B"
 
     id = Column(Integer, primary_key=True)
     ticker = Column(String, nullable=False, index=True)
@@ -155,8 +155,8 @@ async def user_info_momentum(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 async def tuesday_number_of_tickers(context: ContextTypes.DEFAULT_TYPE):
     try:
-        query_result_10B = session.query(TickersList10B).all()
-        msg = f"Number of tickers this week: {len(query_result_10B)}"
+        query_result_5B = session.query(TickersList5B).all()
+        msg = f"Number of tickers this week: {len(query_result_5B)}"
         await context.bot.send_message(
             chat_id=os.getenv("CJT_GROUP_ID"),
             message_thread_id=os.getenv("TICKER_BOT_ROOM"),
