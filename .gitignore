@@ -18,6 +18,7 @@ staticfiles/
 daily_data_csv/
 *.csv
 rozne/
+corrections_statistics/
 query_db.py
 # IDEs and editors
 .vscode/
