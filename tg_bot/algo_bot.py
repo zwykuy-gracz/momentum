@@ -52,3 +52,6 @@ application.add_handler(CommandHandler("algo", algo))
 application.add_handler(CommandHandler("loosers", top200_loosers))
 
 application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+# TODO:
+# https://youtu.be/VV202Rydafc?si=jXLe781MV1r3ZDLp&t=2379

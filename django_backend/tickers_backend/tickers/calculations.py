@@ -150,18 +150,18 @@ def get_list_of_weekly_change_dates():
     return lst_dates
 
 
-def get_weekly_change(list_of_fridays):
-    ticker = "NVDA"
-    weekly_change = []
+def get_weekly_change(list_of_fridays, ticker):
+    # ticker = "NVDA"
+    weekly_changes_list = []
     for date in list_of_fridays:
-        weekly_change.append(
-            StockData.objects.filter(date=date, ticker=ticker).first().weekly_change
+        weekly_changes_list.append(
+            StockData.objects.filter(date=date, ticker=ticker).values_list()[0][17]
         )
-    return weekly_change
+    return weekly_changes_list
 
 
 list_of_fridays = get_list_of_weekly_change_dates()
-list_of_weekly_changes = get_weekly_change(list_of_fridays)
+# list_of_weekly_changes = get_weekly_change(list_of_fridays)
 
 last_working_day = previous_working_day()
 # last_close = previous_working_day_data(last_working_day)
