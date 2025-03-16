@@ -92,7 +92,7 @@ def update_market_cap(df):
 def select_lt_5B():
     lt_5B = (
         session.query(TickersList1B)
-        .filter(TickersList1B.market_cap > 8_000_000_000)
+        .filter(TickersList1B.market_cap > 7_000_000_000)
         .all()
     )
     logging.info("Tickers with market_cap > 5B selected")
@@ -127,8 +127,10 @@ def query_db_length_after():
 def main():
     logging.info("Starting weekly_5B_tickers_update.py")
     query_db_length_before()
-    df_1B_ticker_MC = create_df_lt_1B("/home/paul/momentum/2025/nasdaq_screener_1741619172852.csv")
-    #df_1B_ticker_MC = create_df_lt_1B("nasdaq_screener_1741619172852.csv")
+    df_1B_ticker_MC = create_df_lt_1B(
+        "/home/paul/momentum/2025/nasdaq_screener_1742158970626.csv"
+    )
+    # df_1B_ticker_MC = create_df_lt_1B("nasdaq_screener_1741619172852.csv")
     update_market_cap(df_1B_ticker_MC)
     lt_5B_tickers = select_lt_5B()
     delete_lt_5B()
