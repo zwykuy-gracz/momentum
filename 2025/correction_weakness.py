@@ -6,6 +6,7 @@ from sqlalchemy.sql import and_
 import os
 import pandas as pd
 import logging
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -95,9 +96,6 @@ Worst performing since November 5 DONE
 Worst performing since peak after November 5
 Best performing after March 4
 """
-
-# previous_day = date.today() - timedelta(days=1)
-previous_day = date(2025, 3, 7)
 
 
 def november_05_top_bottom_50(last_date):
@@ -222,18 +220,21 @@ def first_rebounce(tickers, last_date, dip_date):
     df_sorted.to_csv(f"./corrections_statistics/march04.csv", index=False)
 
 
-# TODO: create func, iterate through all tickers,
 # algo for best performing
 # add to DB, TG bot
 list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
 last_date = date.today() - timedelta(days=1)
 searched_dip_date = date(2025, 3, 4)
-# worst_performing_after_peak(list_of_tickers)
-# top_200_loosers("./corrections_statistics/peak_to_bottom.csv")
-df_top200_loosers = pd.read_csv("./corrections_statistics/peak_to_bottom.csv").head(200)
+
+november_05_top_bottom_50(last_date)
+
+worst_performing_after_peak(list_of_tickers)
+time.sleep(2)
+top_200_loosers("./corrections_statistics/peak_to_bottom.csv")
+time.sleep(2)
+df_top200_loosers = pd.read_csv("./corrections_statistics/top_200_loosers.csv")
+time.sleep(2)
 lst_top200_loosers_tickers = list(df_top200_loosers["ticker"])
 first_rebounce(lst_top200_loosers_tickers, last_date, searched_dip_date)
 
 # previous_day = date.today() - timedelta(days=1)
-
-# november_05_top_bottom_50(last_date)

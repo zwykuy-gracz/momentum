@@ -1,8 +1,6 @@
 import os
 import logging
-import time
-import logging
-from datetime import date, timedelta, datetime
+import requests
 import pandas as pd
 
 from telegram import Update
@@ -46,10 +44,18 @@ async def top200_loosers(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.error("top200_loosers Error: %s", e)
 
 
+async def weekly_worst(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    endpoint = f"http://127.0.0.1:8000/api/weekly-worst/{context.args[0]}"
+    response = requests.get(url=endpoint)
+    data = response.json()
+    await update.message.reply_text(text=data)
+
+
 application = Application.builder().token(os.getenv("ALGO_BOT_TOKEN")).build()
 
 application.add_handler(CommandHandler("algo", algo))
 application.add_handler(CommandHandler("loosers", top200_loosers))
+application.add_handler(CommandHandler("ww", weekly_worst))
 
 application.run_polling(allowed_updates=Update.ALL_TYPES)
 
