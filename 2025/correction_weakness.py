@@ -223,14 +223,14 @@ def first_rebounce(tickers, last_date, dip_date):
 # algo for best performing
 # add to DB, TG bot
 list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
-last_date = date.today() - timedelta(days=1)
+last_date = date.today() - timedelta(days=3)
 searched_dip_date = date(2025, 3, 4)
 
-november_05_top_bottom_50(last_date)
+# november_05_top_bottom_50(last_date)
 
-worst_performing_after_peak(list_of_tickers)
-print(f"done worst_performing_after_peak")
-time.sleep(2)
+# worst_performing_after_peak(list_of_tickers)
+# print(f"done worst_performing_after_peak")
+# # time.sleep(2)
 top_200_loosers("./corrections_statistics/peak_to_bottom.csv")
 print(f"done top_200_loosers")
 time.sleep(2)
