@@ -87,12 +87,11 @@ def update_market_cap(df):
     logging.info("Market Caps updated")
 
 
-# TODO this has to be modified until 5B MC reached
 # Step 3: Select tickers with market_cap > 5B
 def select_lt_5B():
     lt_5B = (
         session.query(TickersList1B)
-        .filter(TickersList1B.market_cap > 6_000_000_000)
+        .filter(TickersList1B.market_cap > 5_000_000_000)
         .all()
     )
     logging.info("Tickers with market_cap > 5B selected")
