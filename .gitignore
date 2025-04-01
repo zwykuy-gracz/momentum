@@ -19,6 +19,7 @@ daily_data_csv/
 *.csv
 rozne/
 corrections_statistics/
+algo_correction/
 query_db.py
 # IDEs and editors
 .vscode/
