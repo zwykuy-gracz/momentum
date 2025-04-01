@@ -56,8 +56,8 @@ class StockData(Base):
     open = Column(Float, nullable=False)
     volume = Column(Integer, nullable=False)
     ytd = Column(Integer, nullable=True)
-    august05 = Column(Float, nullable=True)
     november05 = Column(Float, nullable=True)
+    march31 = Column(Float, nullable=True)
     ma50 = Column(Float, nullable=True)
     ma50_above = Column(Boolean, nullable=True)
     ma100 = Column(Float, nullable=True)
@@ -191,8 +191,8 @@ def daily_count_new_records(last_date):
     return len(query_result)
 
 
-def counting_and_populating_ytd_0805_1105_return(tickers, last_date):
-    logging.info("YTD, 0508, 0511 calculations started.")
+def counting_and_populating_ytd_1105_3103_return(tickers, last_date):
+    logging.info("YTD, 0511, 3103 calculations started.")
     for ticker in tickers:
         try:
             last_day_closing_price = (
@@ -213,20 +213,20 @@ def counting_and_populating_ytd_0805_1105_return(tickers, last_date):
                 .first()
             )
 
-            august05_opening_price = (
-                session.query(StockData)
-                .filter(
-                    StockData.ticker == ticker,
-                    StockData.date == date(2024, 8, 5),
-                )
-                .first()
-            )
-
             november05_opening_price = (
                 session.query(StockData)
                 .filter(
                     StockData.ticker == ticker,
                     StockData.date == date(2024, 11, 5),
+                )
+                .first()
+            )
+
+            march31_opening_price = (
+                session.query(StockData)
+                .filter(
+                    StockData.ticker == ticker,
+                    StockData.date == date(2025, 3, 31),
                 )
                 .first()
             )
@@ -239,14 +239,6 @@ def counting_and_populating_ytd_0805_1105_return(tickers, last_date):
                 {"ytd": ytd_return}
             )
 
-            august05_return = (
-                (last_day_closing_price.close - august05_opening_price.open)
-                / august05_opening_price.open
-            ) * 100
-            session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"august05": august05_return}
-            )
-
             november05_return = (
                 (last_day_closing_price.close - november05_opening_price.open)
                 / november05_opening_price.open
@@ -255,14 +247,22 @@ def counting_and_populating_ytd_0805_1105_return(tickers, last_date):
                 {"november05": november05_return}
             )
 
+            amarch31_return = (
+                (last_day_closing_price.close - march31_opening_price.open)
+                / march31_opening_price.open
+            ) * 100
+            session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
+                {"march31": amarch31_return}
+            )
+
             session.commit()
         except AttributeError as e:
             logging.error(
                 f"Error with {ticker} in YTD calculations: {e}", exc_info=True
             )
 
-    logging.info("YTD, 0508, 0511 calculations completed successfully.")
-    print("ytd_0805_1105_return counted")
+    logging.info("YTD, 0511, 3103 calculations completed successfully.")
+    print("ytd_1105_3103_return counted")
 
 
 def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
@@ -420,7 +420,7 @@ def main():
         read_df_from_csv_and_populate_db(previous_day)
         number_of_new_records_in_DB = daily_count_new_records(previous_day)
         if number_of_new_records_in_DB > 0:
-            counting_and_populating_ytd_0805_1105_return(list_of_tickers, previous_day)
+            counting_and_populating_ytd_1105_3103_return(list_of_tickers, previous_day)
 
             nasdaq_counting_and_populating_DB_with_SMAs(previous_day)
             # It takes about 270 sec
@@ -452,6 +452,3 @@ if __name__ == "__main__":
     main()
 
     session.close()
-
-
-# bad_tickers = ['BGNE', 'CBOE', 'CET', 'EXEEL', 'IMO'] bad for SMA

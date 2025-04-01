@@ -14,7 +14,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
-logging.info(f"Starting Best/worst YTD, 0508, 0511 DB populating")
+logging.info(f"Starting Best/worst YTD, 0511, 3103 DB populating")
 
 Base = declarative_base()
 
@@ -26,8 +26,8 @@ class StockData(Base):
     date = Column(Date, nullable=False)
     ticker = Column(String, nullable=False, index=True)
     ytd = Column(Float, nullable=True)
-    august05 = Column(Float, nullable=True)
     november05 = Column(Float, nullable=True)
+    march31 = Column(Float, nullable=True)
     weekly_change = Column(Float, nullable=False)
 
     def __repr__(self):
@@ -43,7 +43,7 @@ class YTD20Best(Base):
     pct_change = Column(Float, nullable=True)
 
     def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.ytd_best})>"
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}')>"
 
 
 class YTD20Worst(Base):
@@ -55,31 +55,7 @@ class YTD20Worst(Base):
     pct_change = Column(Float, nullable=True)
 
     def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.ytd_worst})>"
-
-
-class August05Best(Base):
-    __tablename__ = "august05_best"
-
-    id = Column(Integer, primary_key=True)
-    date = Column(Date, nullable=False)
-    ticker = Column(String, nullable=False, index=True)
-    pct_change = Column(Float, nullable=True)
-
-    def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.august05_best})>"
-
-
-class August05Worst(Base):
-    __tablename__ = "august05_worst"
-
-    id = Column(Integer, primary_key=True)
-    date = Column(Date, nullable=False)
-    ticker = Column(String, nullable=False, index=True)
-    pct_change = Column(Float, nullable=True)
-
-    def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.august05_worst})>"
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}')>"
 
 
 class November05Best(Base):
@@ -91,7 +67,7 @@ class November05Best(Base):
     pct_change = Column(Float, nullable=True)
 
     def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.november05_best})>"
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}')>"
 
 
 class November05Worst(Base):
@@ -103,7 +79,31 @@ class November05Worst(Base):
     pct_change = Column(Float, nullable=True)
 
     def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.november05_worst})>"
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}')>"
+
+
+class March31Best(Base):
+    __tablename__ = "march31_best"
+
+    id = Column(Integer, primary_key=True)
+    date = Column(Date, nullable=False)
+    ticker = Column(String, nullable=False, index=True)
+    pct_change = Column(Float, nullable=True)
+
+    def __repr__(self):
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}')>"
+
+
+class March31Worst(Base):
+    __tablename__ = "march31_worst"
+
+    id = Column(Integer, primary_key=True)
+    date = Column(Date, nullable=False)
+    ticker = Column(String, nullable=False, index=True)
+    pct_change = Column(Float, nullable=True)
+
+    def __repr__(self):
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}')>"
 
 
 engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
@@ -118,37 +118,37 @@ query_result = (
         StockData.date,
         StockData.ticker,
         StockData.ytd,
-        StockData.august05,
+        StockData.march31,
         StockData.november05,
     )
     .filter(StockData.date == previous_day)
     .all()
 )
 df = pd.DataFrame(
-    query_result, columns=["Date", "Ticker", "YTD", "August05", "November05"]
+    query_result, columns=["Date", "Ticker", "YTD", "November05", "March31"]
 )
 df["Date"] = pd.to_datetime(df["Date"]).dt.date
 df = df.dropna()
 
 df_ytd = df[["Date", "Ticker", "YTD"]]
-df_august05 = df[["Date", "Ticker", "August05"]]
 df_november05 = df[["Date", "Ticker", "November05"]]
+df_march31 = df[["Date", "Ticker", "March31"]]
 
 df_ytd_sorted = df_ytd.sort_values(by="YTD", ascending=False)
-df_august05_sorted = df_august05.sort_values(by="August05", ascending=False)
 df_november05_sorted = df_november05.sort_values(by="November05", ascending=False)
+df_march31_sorted = df_march31.sort_values(by="March31", ascending=False)
 
 ytd_top20 = df_ytd_sorted.head(20)
 ytd_worst20 = df_ytd_sorted.tail(20)
 ytd_worst20 = ytd_worst20.sort_values(by="YTD", ascending=True)
 
-august05_top20 = df_august05_sorted.head(20)
-august05_worst20 = df_august05_sorted.tail(20)
-august05_worst20 = august05_worst20.sort_values(by="August05", ascending=True)
-
 november05_top20 = df_november05_sorted.head(20)
 november05_worst20 = df_november05_sorted.tail(20)
 november05_worst20 = november05_worst20.sort_values(by="November05", ascending=True)
+
+march31_top20 = df_march31_sorted.head(20)
+march31_worst20 = df_march31_sorted.tail(20)
+march31_worst20 = march31_worst20.sort_values(by="March31", ascending=True)
 
 
 for _, row in ytd_top20.iterrows():
@@ -164,22 +164,6 @@ for _, row in ytd_worst20.iterrows():
         date=row["Date"],
         ticker=row["Ticker"],
         pct_change=row["YTD"],
-    )
-    session.add(stock_data)
-
-for _, row in august05_top20.iterrows():
-    stock_data = August05Best(
-        date=row["Date"],
-        ticker=row["Ticker"],
-        pct_change=row["August05"],
-    )
-    session.add(stock_data)
-
-for _, row in august05_worst20.iterrows():
-    stock_data = August05Worst(
-        date=row["Date"],
-        ticker=row["Ticker"],
-        pct_change=row["August05"],
     )
     session.add(stock_data)
 
@@ -199,10 +183,26 @@ for _, row in november05_worst20.iterrows():
     )
     session.add(stock_data)
 
+for _, row in march31_top20.iterrows():
+    stock_data = March31Best(
+        date=row["Date"],
+        ticker=row["Ticker"],
+        pct_change=row["March31"],
+    )
+    session.add(stock_data)
+
+for _, row in march31_worst20.iterrows():
+    stock_data = March31Worst(
+        date=row["Date"],
+        ticker=row["Ticker"],
+        pct_change=row["March31"],
+    )
+    session.add(stock_data)
+
 session.commit()
 session.close()
 
-logging.info(f"Finished Best/worst YTD, 0508, 0511 DB populating")
+logging.info(f"Finished Best/worst YTD, 0511, 3103 DB populating")
 
 import time
 import runpy

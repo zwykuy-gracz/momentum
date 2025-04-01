@@ -97,6 +97,6 @@ logging.info("Chart created successfully.")
 logging.info("10 seconds sleep before counting YTD Agusut 5")
 time.sleep(10)
 try:
-    runpy.run_path(path_name=os.getenv("YTD_0508_0511_PATH"))
+    runpy.run_path(path_name=os.getenv("YTD_0511_3103_PATH"))
 except Exception as e:
-    logging.error(f"Error in reaching YTD_0508_0511 script: {e}", exc_info=True)
+    logging.error(f"Error in reaching YTD_0511_3103 script: {e}", exc_info=True)
