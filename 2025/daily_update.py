@@ -247,12 +247,12 @@ def counting_and_populating_ytd_1105_3103_return(tickers, last_date):
                 {"november05": november05_return}
             )
 
-            amarch31_return = (
+            march31_return = (
                 (last_day_closing_price.close - march31_opening_price.open)
                 / march31_opening_price.open
             ) * 100
             session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"march31": amarch31_return}
+                {"march31": march31_return}
             )
 
             session.commit()

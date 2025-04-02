@@ -118,8 +118,8 @@ query_result = (
         StockData.date,
         StockData.ticker,
         StockData.ytd,
-        StockData.march31,
         StockData.november05,
+        StockData.march31,
     )
     .filter(StockData.date == previous_day)
     .all()

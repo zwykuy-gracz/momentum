@@ -94,7 +94,7 @@ plt.savefig(
 
 logging.info("Chart created successfully.")
 
-logging.info("10 seconds sleep before counting YTD Agusut 5")
+logging.info("10 seconds sleep before counting YTD, 0511, 3103")
 time.sleep(10)
 try:
     runpy.run_path(path_name=os.getenv("YTD_0511_3103_PATH"))
