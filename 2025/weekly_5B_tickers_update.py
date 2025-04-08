@@ -127,7 +127,7 @@ def main():
     logging.info("Starting weekly_5B_tickers_update.py")
     query_db_length_before()
     # TODO: Add check if == 1
-    number_files = os.listdir("weekly_tickers_update_file/")
+    number_files = os.listdir(os.getenv("WEEKLY_TICKERS_UPDATE_PATH"))
     uri = f"{os.getenv('WEEKLY_TICKERS_UPDATE_PATH')}/{number_files[0]}"
     df_1B_ticker_MC = create_df_lt_1B(uri)
     update_market_cap(df_1B_ticker_MC)
