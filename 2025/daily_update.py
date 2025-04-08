@@ -241,7 +241,7 @@ def counting_and_populating_ytd_corrections_return(tickers, last_date):
             session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
                 {"ytd": ytd_return}
             )
-            # TODO: CHANGE COLUMN NAME
+
             previous_correction_return = (
                 (last_day_closing_price.close - previous_correction_opening_price.open)
                 / previous_correction_opening_price.open
@@ -249,7 +249,7 @@ def counting_and_populating_ytd_corrections_return(tickers, last_date):
             session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
                 {"previous_correction": previous_correction_return}
             )
-            # TODO: CHANGE COLUMN NAME
+
             last_correction_return = (
                 (last_day_closing_price.close - last_correction_opening_price.open)
                 / last_correction_opening_price.open
