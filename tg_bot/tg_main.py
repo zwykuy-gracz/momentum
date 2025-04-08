@@ -62,34 +62,11 @@ class YTD20Worst(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.ytd_worst})>"
 
 
-class November05Best(Base):
-    __tablename__ = "november05_best"
+class PreviousCorrectionBest(Base):
+    __tablename__ = "previous_correction_best"
 
     id = Column(Integer, primary_key=True)
-    date = Column(Date, nullable=False)
-    ticker = Column(String, nullable=False, index=True)
-    pct_change = Column(Float, nullable=True)
-
-    def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.november05_best})>"
-
-
-class November05Worst(Base):
-    __tablename__ = "november05_worst"
-
-    id = Column(Integer, primary_key=True)
-    date = Column(Date, nullable=False)
-    ticker = Column(String, nullable=False, index=True)
-    pct_change = Column(Float, nullable=True)
-
-    def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.november05_worst})>"
-
-
-class March31Best(Base):
-    __tablename__ = "march31_best"
-
-    id = Column(Integer, primary_key=True)
+    benchmark_date = Column(Date, nullable=False)
     date = Column(Date, nullable=False)
     ticker = Column(String, nullable=False, index=True)
     pct_change = Column(Float, nullable=True)
@@ -98,10 +75,37 @@ class March31Best(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}')>"
 
 
-class March31Worst(Base):
-    __tablename__ = "march31_worst"
+class PreviousCorrectionWorst(Base):
+    __tablename__ = "previous_correction_worst"
 
     id = Column(Integer, primary_key=True)
+    benchmark_date = Column(Date, nullable=False)
+    date = Column(Date, nullable=False)
+    ticker = Column(String, nullable=False, index=True)
+    pct_change = Column(Float, nullable=True)
+
+    def __repr__(self):
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}')>"
+
+
+class LastCorrectionBest(Base):
+    __tablename__ = "last_correction_best"
+
+    id = Column(Integer, primary_key=True)
+    benchmark_date = Column(Date, nullable=False)
+    date = Column(Date, nullable=False)
+    ticker = Column(String, nullable=False, index=True)
+    pct_change = Column(Float, nullable=True)
+
+    def __repr__(self):
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}')>"
+
+
+class LastCorrectionWorst(Base):
+    __tablename__ = "last_correction_worst"
+
+    id = Column(Integer, primary_key=True)
+    benchmark_date = Column(Date, nullable=False)
     date = Column(Date, nullable=False)
     ticker = Column(String, nullable=False, index=True)
     pct_change = Column(Float, nullable=True)
@@ -213,108 +217,108 @@ async def ytd_bottom20(context: ContextTypes.DEFAULT_TYPE):
         logger.error("ytd_bottom20 Error: %s", e)
 
 
-async def november05_top20(context: ContextTypes.DEFAULT_TYPE):
+async def previous_correction_top20(context: ContextTypes.DEFAULT_TYPE):
     try:
         query_result = (
             session.query(
-                November05Best.date,
-                November05Best.ticker,
-                November05Best.pct_change,
+                PreviousCorrectionBest.date,
+                PreviousCorrectionBest.ticker,
+                PreviousCorrectionBest.pct_change,
             )
-            .filter(November05Best.date == previous_day)
+            .filter(PreviousCorrectionBest.date == previous_day)
             .all()
         )
-        november05_best_msg = (
+        previous_correction_best_msg = (
             f"Best performing stocks since November 5th as of {previous_day}\n\n"
         )
         for q in query_result:
-            november05_best_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
+            previous_correction_best_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
         await context.bot.send_message(
             chat_id=os.getenv("CJT_GROUP_ID"),
             message_thread_id=os.getenv("TICKER_BOT_ROOM"),
-            text=november05_best_msg,
+            text=previous_correction_best_msg,
         )
-        logging.info("november05_top20 successly sent")
+        logging.info("previous_correction_top20 successly sent")
     except Exception as e:
-        logger.error("november05_top20 Error: %s", e)
+        logger.error("previous_correction_top20 Error: %s", e)
 
 
-async def november05_bottom20(context: ContextTypes.DEFAULT_TYPE):
+async def previous_correction_bottom20(context: ContextTypes.DEFAULT_TYPE):
     try:
         query_result = (
             session.query(
-                November05Worst.date,
-                November05Worst.ticker,
-                November05Worst.pct_change,
+                PreviousCorrectionWorst.date,
+                PreviousCorrectionWorst.ticker,
+                PreviousCorrectionWorst.pct_change,
             )
-            .filter(November05Worst.date == previous_day)
+            .filter(PreviousCorrectionWorst.date == previous_day)
             .all()
         )
-        november05_worst_msg = (
+        previous_correction_worst_msg = (
             f"Worst performing stocks since November 5th as of {previous_day}\n\n"
         )
         for q in query_result:
-            november05_worst_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
+            previous_correction_worst_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
         await context.bot.send_message(
             chat_id=os.getenv("CJT_GROUP_ID"),
             message_thread_id=os.getenv("TICKER_BOT_ROOM"),
-            text=november05_worst_msg,
+            text=previous_correction_worst_msg,
         )
-        logging.info("november05_bottom20 successly sent")
+        logging.info("previous_correction_bottom20 successly sent")
     except Exception as e:
-        logger.error("november05_bottom20 Error: %s", e)
+        logger.error("previous_correction_bottom20 Error: %s", e)
 
 
-async def march31_top20(context: ContextTypes.DEFAULT_TYPE):
+async def last_correction_top20(context: ContextTypes.DEFAULT_TYPE):
     try:
         query_result = (
             session.query(
-                March31Best.date,
-                March31Best.ticker,
-                March31Best.pct_change,
+                LastCorrectionBest.date,
+                LastCorrectionBest.ticker,
+                LastCorrectionBest.pct_change,
             )
-            .filter(March31Best.date == previous_day)
+            .filter(LastCorrectionBest.date == previous_day)
             .all()
         )
-        march31_best_msg = (
-            f"Best performing stocks since March 31st as of {previous_day}\n\n"
+        last_correction_best_msg = (
+            f"Best performing stocks since April 7th as of {previous_day}\n\n"
         )
         for q in query_result:
-            march31_best_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
+            last_correction_best_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
         await context.bot.send_message(
             chat_id=os.getenv("CJT_GROUP_ID"),
             message_thread_id=os.getenv("TICKER_BOT_ROOM"),
-            text=march31_best_msg,
+            text=last_correction_best_msg,
         )
-        logging.info("march31_top20 successly sent")
+        logging.info("last_correction_top20 successly sent")
     except Exception as e:
-        logger.error("march31_top20 Error: %s", e)
+        logger.error("last_correction_top20 Error: %s", e)
 
 
-async def march31_bottom20(context: ContextTypes.DEFAULT_TYPE):
+async def last_correction_bottom20(context: ContextTypes.DEFAULT_TYPE):
     try:
         query_result = (
             session.query(
-                March31Worst.date,
-                March31Worst.ticker,
-                March31Worst.pct_change,
+                LastCorrectionWorst.date,
+                LastCorrectionWorst.ticker,
+                LastCorrectionWorst.pct_change,
             )
-            .filter(March31Worst.date == previous_day)
+            .filter(LastCorrectionWorst.date == previous_day)
             .all()
         )
-        march31_worst_msg = (
-            f"Wrost performing stocks since March 31st as of {previous_day}\n\n"
+        last_correction_worst_msg = (
+            f"Wrost performing stocks since April 7th as of {previous_day}\n\n"
         )
         for q in query_result:
-            march31_worst_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
+            last_correction_worst_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
         await context.bot.send_message(
             chat_id=os.getenv("CJT_GROUP_ID"),
             message_thread_id=os.getenv("TICKER_BOT_ROOM"),
-            text=march31_worst_msg,
+            text=last_correction_worst_msg,
         )
-        logging.info("march31_bottom20 successly sent")
+        logging.info("last_correction_bottom20 successly sent")
     except Exception as e:
-        logger.error("march31_bottom20 Error: %s", e)
+        logger.error("last_correction_bottom20 Error: %s", e)
 
 
 async def weekly_top20(context: ContextTypes.DEFAULT_TYPE):
@@ -391,10 +395,10 @@ elif today == "Saturday":
     job_queue.run_once(weekly_bottom20, 4)
 job_queue.run_once(ytd_top20, 7)
 job_queue.run_once(ytd_bottom20, 10)
-job_queue.run_once(november05_top20, 13)
-job_queue.run_once(november05_bottom20, 16)
-job_queue.run_once(march31_top20, 19)
-job_queue.run_once(march31_bottom20, 22)
+job_queue.run_once(previous_correction_top20, 13)
+job_queue.run_once(previous_correction_bottom20, 16)
+job_queue.run_once(last_correction_top20, 19)
+job_queue.run_once(last_correction_bottom20, 22)
 job_queue.run_once(market_breadth, 25)
 logging.info("job queue ended")
 
