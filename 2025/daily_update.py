@@ -29,6 +29,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
+YTD_DATE = date(2025, 1, 2)
 PREVIOUS_CORRECTION_DATE = date(2024, 11, 5)
 LAST_CORRECTION_DATE = date(2025, 4, 7)
 
@@ -210,7 +211,7 @@ def counting_and_populating_ytd_corrections_return(tickers, last_date):
                 session.query(StockData)
                 .filter(
                     StockData.ticker == ticker,
-                    StockData.date == date(2025, 1, 2),
+                    StockData.date == YTD_DATE,
                 )
                 .first()
             )
@@ -219,7 +220,7 @@ def counting_and_populating_ytd_corrections_return(tickers, last_date):
                 session.query(StockData)
                 .filter(
                     StockData.ticker == ticker,
-                    StockData.date == date(2024, 11, 5),
+                    StockData.date == PREVIOUS_CORRECTION_DATE,
                 )
                 .first()
             )
@@ -228,7 +229,7 @@ def counting_and_populating_ytd_corrections_return(tickers, last_date):
                 session.query(StockData)
                 .filter(
                     StockData.ticker == ticker,
-                    StockData.date == date(2025, 4, 7),
+                    StockData.date == LAST_CORRECTION_DATE,
                 )
                 .first()
             )
@@ -246,7 +247,7 @@ def counting_and_populating_ytd_corrections_return(tickers, last_date):
                 / previous_correction_opening_price.open
             ) * 100
             session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"november05": previous_correction_return}
+                {"previous_correction": previous_correction_return}
             )
             # TODO: CHANGE COLUMN NAME
             last_correction_return = (
@@ -254,7 +255,7 @@ def counting_and_populating_ytd_corrections_return(tickers, last_date):
                 / last_correction_opening_price.open
             ) * 100
             session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"march31": last_correction_return}
+                {"last_correction": last_correction_return}
             )
 
             session.commit()
