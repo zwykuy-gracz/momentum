@@ -29,6 +29,8 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
+PREVIOUS_CORRECTION_DATE = date(2024, 11, 5)
+LAST_CORRECTION_DATE = date(2025, 4, 7)
 
 """
 DAILY BOT's Check LIST
@@ -56,8 +58,8 @@ class StockData(Base):
     open = Column(Float, nullable=False)
     volume = Column(Integer, nullable=False)
     ytd = Column(Integer, nullable=True)
-    november05 = Column(Float, nullable=True)
-    march31 = Column(Float, nullable=True)
+    previous_correction = Column(Float, nullable=True)
+    last_correction = Column(Float, nullable=True)
     ma50 = Column(Float, nullable=True)
     ma50_above = Column(Boolean, nullable=True)
     ma100 = Column(Float, nullable=True)
@@ -191,8 +193,8 @@ def daily_count_new_records(last_date):
     return len(query_result)
 
 
-def counting_and_populating_ytd_1105_3103_return(tickers, last_date):
-    logging.info("YTD, 0511, 3103 calculations started.")
+def counting_and_populating_ytd_corrections_return(tickers, last_date):
+    logging.info("YTD, corrections calculations started.")
     for ticker in tickers:
         try:
             last_day_closing_price = (
@@ -213,7 +215,7 @@ def counting_and_populating_ytd_1105_3103_return(tickers, last_date):
                 .first()
             )
 
-            november05_opening_price = (
+            previous_correction_opening_price = (
                 session.query(StockData)
                 .filter(
                     StockData.ticker == ticker,
@@ -222,11 +224,11 @@ def counting_and_populating_ytd_1105_3103_return(tickers, last_date):
                 .first()
             )
 
-            march31_opening_price = (
+            last_correction_opening_price = (
                 session.query(StockData)
                 .filter(
                     StockData.ticker == ticker,
-                    StockData.date == date(2025, 3, 31),
+                    StockData.date == date(2025, 4, 7),
                 )
                 .first()
             )
@@ -238,21 +240,21 @@ def counting_and_populating_ytd_1105_3103_return(tickers, last_date):
             session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
                 {"ytd": ytd_return}
             )
-
-            november05_return = (
-                (last_day_closing_price.close - november05_opening_price.open)
-                / november05_opening_price.open
+            # TODO: CHANGE COLUMN NAME
+            previous_correction_return = (
+                (last_day_closing_price.close - previous_correction_opening_price.open)
+                / previous_correction_opening_price.open
             ) * 100
             session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"november05": november05_return}
+                {"november05": previous_correction_return}
             )
-
-            amarch31_return = (
-                (last_day_closing_price.close - march31_opening_price.open)
-                / march31_opening_price.open
+            # TODO: CHANGE COLUMN NAME
+            last_correction_return = (
+                (last_day_closing_price.close - last_correction_opening_price.open)
+                / last_correction_opening_price.open
             ) * 100
             session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"march31": amarch31_return}
+                {"march31": last_correction_return}
             )
 
             session.commit()
@@ -261,8 +263,8 @@ def counting_and_populating_ytd_1105_3103_return(tickers, last_date):
                 f"Error with {ticker} in YTD calculations: {e}", exc_info=True
             )
 
-    logging.info("YTD, 0511, 3103 calculations completed successfully.")
-    print("ytd_1105_3103_return counted")
+    logging.info("YTD, corrections calculations completed successfully.")
+    print("ytd_corrections_return counted")
 
 
 def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
@@ -420,7 +422,9 @@ def main():
         read_df_from_csv_and_populate_db(previous_day)
         number_of_new_records_in_DB = daily_count_new_records(previous_day)
         if number_of_new_records_in_DB > 0:
-            counting_and_populating_ytd_1105_3103_return(list_of_tickers, previous_day)
+            counting_and_populating_ytd_corrections_return(
+                list_of_tickers, previous_day
+            )
 
             nasdaq_counting_and_populating_DB_with_SMAs(previous_day)
             # It takes about 270 sec
