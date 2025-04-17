@@ -231,7 +231,7 @@ print("YTD finished - 5 seconds sleepipng")
 time.sleep(5)
 today = datetime.today().strftime("%A")
 try:
-    if today == "Saturday":
+    if today == "Friday":
         runpy.run_path(path_name=os.getenv("WEEKLY_CHANGE_PATH"))
     else:
         runpy.run_path(path_name=os.getenv("TG_BOT_PATH"))
