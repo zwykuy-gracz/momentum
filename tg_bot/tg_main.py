@@ -390,7 +390,7 @@ job_queue = application.job_queue
 today = datetime.today().strftime("%A")
 if today.lower() == "tuesday":
     job_queue.run_once(tuesday_number_of_tickers, 4)
-elif today == "Friday":
+elif today == "Saturday":
     job_queue.run_once(weekly_top20, 2)
     job_queue.run_once(weekly_bottom20, 4)
 job_queue.run_once(ytd_top20, 7)

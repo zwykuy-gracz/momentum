@@ -93,7 +93,7 @@ session = Session()
 
 # dates[1] was changed to 7 and next will have to change to 9
 def weekly_change(tickers):
-    dates = [date.today() - timedelta(days=1), date.today() - timedelta(days=7)]
+    dates = [date.today() - timedelta(days=1), date.today() - timedelta(days=9)]
     for ticker in tickers:
         try:
             previous_friday_data = (
