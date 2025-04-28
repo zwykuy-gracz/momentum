@@ -390,16 +390,15 @@ job_queue = application.job_queue
 today = datetime.today().strftime("%A")
 if today.lower() == "tuesday":
     job_queue.run_once(tuesday_number_of_tickers, 4)
-elif today == "Saturday":
-    job_queue.run_once(weekly_top20, 2)
-    job_queue.run_once(weekly_bottom20, 4)
+job_queue.run_once(weekly_top20, 2)
+job_queue.run_once(weekly_bottom20, 4)
 job_queue.run_once(ytd_top20, 7)
 job_queue.run_once(ytd_bottom20, 10)
-job_queue.run_once(previous_correction_top20, 13)
-job_queue.run_once(previous_correction_bottom20, 16)
-job_queue.run_once(last_correction_top20, 19)
-job_queue.run_once(last_correction_bottom20, 22)
-job_queue.run_once(market_breadth, 25)
+# job_queue.run_once(previous_correction_top20, 13)
+# job_queue.run_once(previous_correction_bottom20, 16)
+job_queue.run_once(last_correction_top20, 13)
+job_queue.run_once(last_correction_bottom20, 16)
+job_queue.run_once(market_breadth, 19)
 logging.info("job queue ended")
 
 application.run_polling(allowed_updates=Update.ALL_TYPES)

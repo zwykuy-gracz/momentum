@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy import Float, Date, Boolean
 from sqlalchemy.orm import sessionmaker, declarative_base
@@ -91,15 +91,14 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
-def weekly_change(tickers):
-    dates = [date.today() - timedelta(days=1), date.today() - timedelta(days=8)]
+def weekly_change(tickers, previous_day, last_friday):
     for ticker in tickers:
         try:
-            previous_friday_data = (
+            previous_day_data = (
                 session.query(SourceData)
                 .filter(
                     SourceData.ticker == ticker,
-                    SourceData.date == dates[1],
+                    SourceData.date == previous_day,
                 )
                 .first()
             )
@@ -107,19 +106,19 @@ def weekly_change(tickers):
                 session.query(SourceData)
                 .filter(
                     SourceData.ticker == ticker,
-                    SourceData.date == dates[0],
+                    SourceData.date == last_friday,
                 )
                 .first()
             )
 
             weekly_returns = (
-                (last_friday_data.close - previous_friday_data.close)
-                / previous_friday_data.close
+                (previous_day_data.close - last_friday_data.close)
+                / last_friday_data.close
             ) * 100
 
-            session.query(SourceData).filter_by(ticker=ticker, date=dates[0]).update(
-                {"weekly_change": weekly_returns}
-            )
+            session.query(SourceData).filter_by(
+                ticker=ticker, date=previous_day
+            ).update({"weekly_change": weekly_returns})
 
             session.commit()
 
@@ -129,9 +128,19 @@ def weekly_change(tickers):
     logging.info(f"Finished weekly change populating")
 
 
+days_shift = {
+    "tuesday": 4,
+    "wednesday": 5,
+    "thursday": 6,
+    "friday": 7,
+    "saturday": 8,
+}
+today = datetime.today().strftime("%A")
+last_friday = date.today() - timedelta(days=days_shift[today.lower()])
+
 previous_day = date.today() - timedelta(days=1)
 list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
-weekly_change(list_of_tickers)
+weekly_change(list_of_tickers, previous_day, last_friday)
 
 query_result = (
     session.query(SourceData.date, SourceData.ticker, SourceData.weekly_change)
