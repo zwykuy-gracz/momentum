@@ -60,7 +60,7 @@ session = Session()
 
 def query_db_length_before():
     query_result_5B = session.query(TickersList5B).all()
-    logging.info(f"Number of tickers lt 5B BEFORE`: {len(query_result_5B)}")
+    logging.info(f"Number of tickers lt 5B BEFORE: {len(query_result_5B)}")
 
 
 # Step 1: Create DF with tickers and Market Cap
