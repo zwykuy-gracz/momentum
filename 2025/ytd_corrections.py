@@ -231,9 +231,6 @@ print("YTD finished - 5 seconds sleepipng")
 time.sleep(5)
 today = datetime.today().strftime("%A")
 try:
-    if today == "Saturday":
-        runpy.run_path(path_name=os.getenv("WEEKLY_CHANGE_PATH"))
-    else:
-        runpy.run_path(path_name=os.getenv("TG_BOT_PATH"))
+    runpy.run_path(path_name=os.getenv("WEEKLY_CHANGE_PATH"))
 except Exception as e:
-    logging.error(f"Error running weekly_change.py or tg_main.py: {e}")
+    logging.error(f"Error running weekly_change.py: {e}")
