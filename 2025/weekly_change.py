@@ -22,19 +22,6 @@ Base = declarative_base()
 print("Starting best/worst weekly DB populating")
 
 
-# Not in use anymore TODO delete
-class TickersList10B(Base):
-    __tablename__ = "list_of_tickers_lt_10B"
-
-    id = Column(Integer, primary_key=True)
-    ticker = Column(String, nullable=False, index=True)
-    nasdaq_tickers = Column(String, nullable=False)
-    nyse_tickers = Column(String, nullable=False)
-
-    def __repr__(self):
-        return f"<StockPrice(ticker='{self.ticker}')>"
-
-
 class TickersList5B(Base):
     __tablename__ = "list_of_tickers_lt_5B"
 
@@ -185,7 +172,11 @@ import runpy
 
 print("5 seconds sleep after weekly is done")
 time.sleep(5)
+today = datetime.today().strftime("%A")
 try:
-    runpy.run_path(path_name=os.getenv("TG_BOT_PATH"))
+    if today.lower() == "saturday":
+        runpy.run_path(path_name=os.getenv("WEEKLY_INDEXES_CHANGE_PATH"))
+    else:
+        runpy.run_path(path_name=os.getenv("TG_BOT_PATH"))
 except Exception as e:
     logging.error(f"Error in running tg_bot.py: {e}")

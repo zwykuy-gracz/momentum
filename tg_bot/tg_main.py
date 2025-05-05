@@ -138,6 +138,18 @@ class Weekly20Worst(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
 
 
+class IndexesWeeklyChange(Base):
+    __tablename__ = "indexes_weekly_change"
+
+    id = Column(Integer, primary_key=True)
+    date = Column(Date, nullable=False)
+    ticker = Column(String, nullable=False, index=True)
+    pct_change = Column(Float, nullable=False)
+
+    def __repr__(self):
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
+
+
 try:
     engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
     logging.info(f"TG Engine created")
@@ -369,6 +381,30 @@ async def weekly_bottom20(context: ContextTypes.DEFAULT_TYPE):
         logger.error("weekly_bottom20 Error: %s", e)
 
 
+async def weekly_indexes(context: ContextTypes.DEFAULT_TYPE):
+    try:
+        query_result = (
+            session.query(
+                IndexesWeeklyChange.date,
+                IndexesWeeklyChange.ticker,
+                IndexesWeeklyChange.pct_change,
+            )
+            .filter(IndexesWeeklyChange.date == previous_day)
+            .all()
+        )
+        weekly_indexes_msg = "This week indexes performance:\n\n"
+        for q in query_result:
+            weekly_indexes_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
+        await context.bot.send_message(
+            chat_id=os.getenv("CJT_GROUP_ID"),
+            message_thread_id=os.getenv("TICKER_BOT_ROOM"),
+            text=weekly_indexes_msg,
+        )
+        logging.info("weekly_indexes successly sent")
+    except Exception as e:
+        logger.error("weekly_indexes Error: %s", e)
+
+
 async def market_breadth(context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         await context.bot.send_photo(
@@ -389,9 +425,11 @@ logging.info("starting job queue")
 job_queue = application.job_queue
 today = datetime.today().strftime("%A")
 if today.lower() == "tuesday":
-    job_queue.run_once(tuesday_number_of_tickers, 4)
-job_queue.run_once(weekly_top20, 2)
-job_queue.run_once(weekly_bottom20, 4)
+    job_queue.run_once(tuesday_number_of_tickers, 1)
+if today.lower() == "saturday":
+    job_queue.run_once(weekly_indexes, 1)
+job_queue.run_once(weekly_top20, 3)
+job_queue.run_once(weekly_bottom20, 5)
 job_queue.run_once(ytd_top20, 7)
 job_queue.run_once(ytd_bottom20, 10)
 # job_queue.run_once(previous_correction_top20, 13)

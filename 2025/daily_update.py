@@ -85,6 +85,15 @@ class TickersList5B(Base):
         return f"<StockPrice(ticker='{self.ticker}')>"
 
 
+def creating_list_of_tickers():
+    list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
+    list_of_indexes = ["QQQ", "SPY", "DIA", "IWM"]
+    list_of_tickers.extend(list_of_indexes)
+    logging.info(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
+    print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
+    return list_of_tickers
+
+
 # downloads from YF and write DFs to files
 def download_tickers_from_yf(tickers, last_date):
     try:
@@ -414,11 +423,8 @@ def main():
         previous_day = date.today() - timedelta(days=1)
         print(f"Working on date: {previous_day}")
         logging.info(f"Working on date: {previous_day}")
-        list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
-        logging.info(
-            f"Created list of tickers from DB with length: {len(list_of_tickers)}"
-        )
-        print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
+        list_of_tickers = creating_list_of_tickers()
+
         download_tickers_from_yf(list_of_tickers, previous_day)
         read_df_from_csv_and_populate_db(previous_day)
         number_of_new_records_in_DB = daily_count_new_records(previous_day)
