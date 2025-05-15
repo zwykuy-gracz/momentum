@@ -54,8 +54,8 @@ class StockData(Base):
     open = Column(Float, nullable=False)
     volume = Column(Integer, nullable=False)
     ytd = Column(Integer, nullable=True)
-    august05 = Column(Float, nullable=True)
-    november05 = Column(Float, nullable=True)
+    # august05 = Column(Float, nullable=True)
+    # november05 = Column(Float, nullable=True)
     ma50 = Column(Float, nullable=True)
     ma50_above = Column(Boolean, nullable=True)
     ma100 = Column(Float, nullable=True)
@@ -101,7 +101,7 @@ def download_tickers_from_yf(tickers, last_date, end_date):
             tickers[:fifth_length_of_tickers],
             group_by="Ticker",
             start=last_date,
-            #end=end_date,
+            # end=end_date,
         )
         df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
         df = df.reset_index()
@@ -125,7 +125,7 @@ def download_tickers_from_yf(tickers, last_date, end_date):
                 tickers[beginning:end],
                 group_by="Ticker",
                 start=last_date,
-                #end=end_date,
+                # end=end_date,
             )
             df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
             df = df.reset_index()
@@ -150,7 +150,7 @@ def download_tickers_from_yf(tickers, last_date, end_date):
                 tickers[fifth_length_of_tickers * 5 :],
                 group_by="Ticker",
                 start=last_date,
-                #end=end_date,
+                # end=end_date,
             )
             df = df.stack(level=0).rename_axis(["Date", "Ticker"]).reset_index(level=1)
             df = df.reset_index()
@@ -424,12 +424,12 @@ def main():
         end_date = date(2025, 3, 29)
         print(f"Working on date: {previous_day}")
         logging.info(f"Working on date: {previous_day}")
-        list_of_tickers = [t.ticker for t in session.query(TickersList1B).all()]
-        logging.info(
-            f"Created list of tickers from DB with length: {len(list_of_tickers)}"
-        )
-        print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
-        download_tickers_from_yf(list_of_tickers, previous_day, end_date)
+        # list_of_tickers = [t.ticker for t in session.query(TickersList1B).all()]
+        # logging.info(
+        #     f"Created list of tickers from DB with length: {len(list_of_tickers)}"
+        # )
+        # print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
+        # download_tickers_from_yf(list_of_tickers, previous_day, end_date)
         # read_df_from_csv_and_populate_db(previous_day)
         # number_of_new_records_in_DB = daily_count_new_records(previous_day)
         # if number_of_new_records_in_DB > 0:

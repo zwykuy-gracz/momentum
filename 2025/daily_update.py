@@ -87,8 +87,31 @@ class TickersList5B(Base):
 
 def creating_list_of_tickers():
     list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
-    list_of_indexes = ["QQQ", "SPY", "DIA", "IWM"]
+    list_of_indexes = [
+        "QQQ",
+        "SPY",
+        "DIA",
+        "IWM",
+        "DAX",
+        "EWQ",
+        "EWU",
+        "EWC",
+        "EWZ",
+        "ARGT",
+        "EWW",
+        "EWA",
+        "MCHI",
+        "KWEB",
+        "EWJ",
+        "EPI",
+        "EWY",
+        "EWT",
+        "EWH",
+        "EWS",
+    ]
+    list_of_commodities = ["GLD", "SLV", "COPX", "USO"]
     list_of_tickers.extend(list_of_indexes)
+    list_of_tickers.extend(list_of_commodities)
     logging.info(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
     print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
     return list_of_tickers

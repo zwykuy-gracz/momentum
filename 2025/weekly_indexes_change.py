@@ -42,7 +42,8 @@ class IndexesWeeklyChange(Base):
     id = Column(Integer, primary_key=True)
     date = Column(Date, nullable=False)
     ticker = Column(String, nullable=False, index=True)
-    pct_change = Column(Float, nullable=False)
+    one_week_pct_change = Column(Float, nullable=False)
+    four_week_pct_change = Column(Float, nullable=False)
 
     def __repr__(self):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
@@ -66,7 +67,16 @@ def weekly_index_change(tickers, last_friday, previous_friday):
                 )
                 .first()
             )
-            previous_friday_data = (
+            one_week_before_friday_data = (
+                session.query(SourceData)
+                .filter(
+                    SourceData.ticker == ticker,
+                    SourceData.date == previous_friday,
+                )
+                .first()
+            )
+
+            four_weeks_before_friday_data = (
                 session.query(SourceData)
                 .filter(
                     SourceData.ticker == ticker,
@@ -76,8 +86,8 @@ def weekly_index_change(tickers, last_friday, previous_friday):
             )
 
             weekly_returns = (
-                (last_friday_data.close - previous_friday_data.close)
-                / previous_friday_data.close
+                (last_friday_data.close - four_weeks_before_friday_data.close)
+                / four_weeks_before_friday_data.close
             ) * 100
 
             session.query(SourceData).filter_by(ticker=ticker, date=last_friday).update(
@@ -94,6 +104,7 @@ def weekly_index_change(tickers, last_friday, previous_friday):
 
 last_friday = date.today() - timedelta(days=1)
 previous_friday = date.today() - timedelta(days=8)
+four_weeks_ago_friday = date.today() - timedelta(days=29)
 
 list_of_indexes = ["QQQ", "SPY", "DIA", "IWM"]
 weekly_index_change(list_of_indexes, last_friday, previous_friday)
