@@ -144,7 +144,21 @@ class IndexesWeeklyChange(Base):
     id = Column(Integer, primary_key=True)
     date = Column(Date, nullable=False)
     ticker = Column(String, nullable=False, index=True)
-    pct_change = Column(Float, nullable=False)
+    one_week_pct_change = Column(Float, nullable=False)
+    four_week_pct_change = Column(Float, nullable=True)
+
+    def __repr__(self):
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
+
+
+class CommoditiesWeeklyChange(Base):
+    __tablename__ = "commodities_weekly_change"
+
+    id = Column(Integer, primary_key=True)
+    date = Column(Date, nullable=False)
+    ticker = Column(String, nullable=False, index=True)
+    one_week_pct_change = Column(Float, nullable=False)
+    four_week_pct_change = Column(Float, nullable=True)
 
     def __repr__(self):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
@@ -383,18 +397,36 @@ async def weekly_bottom20(context: ContextTypes.DEFAULT_TYPE):
 
 async def weekly_indexes(context: ContextTypes.DEFAULT_TYPE):
     try:
-        query_result = (
+        # ------INDEXES----------
+        query_result_indexes = (
             session.query(
                 IndexesWeeklyChange.date,
                 IndexesWeeklyChange.ticker,
-                IndexesWeeklyChange.pct_change,
+                IndexesWeeklyChange.one_week_pct_change,
+                IndexesWeeklyChange.four_week_pct_change,
             )
             .filter(IndexesWeeklyChange.date == previous_day)
             .all()
         )
         weekly_indexes_msg = "This week indexes performance:\n\n"
-        for q in query_result:
-            weekly_indexes_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
+        for qi in query_result_indexes:
+            weekly_indexes_msg += f"{qi.ticker}. 1W: {round(qi.one_week_pct_change,2)}% 4Ws: {round(qi.four_week_pct_change,2)}%\n"
+
+        # ------COMMODITIES---------
+        query_result_commodities = (
+            session.query(
+                CommoditiesWeeklyChange.date,
+                CommoditiesWeeklyChange.ticker,
+                CommoditiesWeeklyChange.one_week_pct_change,
+                CommoditiesWeeklyChange.four_week_pct_change,
+            )
+            .filter(CommoditiesWeeklyChange.date == previous_day)
+            .all()
+        )
+        weekly_indexes_msg += "\n\nThis week commodities performance:\n\n"
+        for qc in query_result_commodities:
+            weekly_indexes_msg += f"{qc.ticker}. 1W: {round(qc.one_week_pct_change,2)}% 4Ws: {round(qc.four_week_pct_change,2)}%\n"
+
         await context.bot.send_message(
             chat_id=os.getenv("CJT_GROUP_ID"),
             message_thread_id=os.getenv("TICKER_BOT_ROOM"),
