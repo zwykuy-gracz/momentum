@@ -46,7 +46,7 @@ class IndexesWeeklyChange(Base):
     four_week_pct_change = Column(Float, nullable=True)
 
     def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}')>"
 
 
 class CommoditiesWeeklyChange(Base):
@@ -59,7 +59,7 @@ class CommoditiesWeeklyChange(Base):
     four_week_pct_change = Column(Float, nullable=True)
 
     def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.weekly_change})>"
+        return f"<StockData(ticker='{self.ticker}', date='{self.date}')>"
 
 
 engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
@@ -153,6 +153,8 @@ def weekly_commodity_change(tickers, last_friday, four_weeks_ago_friday):
 last_friday = date.today() - timedelta(days=1)
 previous_friday = date.today() - timedelta(days=8)
 four_weeks_ago_friday = date.today() - timedelta(days=30)
+print(last_friday)
+print(four_weeks_ago_friday)
 
 list_of_indexes = [
     "QQQ",
@@ -209,6 +211,8 @@ query_commodities = session.query(
 )
 
 results_commodities = query_commodities.all()
+for r in results_commodities:
+    print(r.date, r.ticker, r.weekly_change)
 
 df_commodities = pd.DataFrame(
     results_commodities, columns=["Date", "Ticker", "Weekly_change"]
@@ -219,6 +223,8 @@ df_commodities = df_commodities.dropna()
 df_weekly_commodities_sorted = df_commodities.sort_values(
     by="Weekly_change", ascending=False
 )
+
+print(df_weekly_commodities_sorted)
 
 for _, row in df_weekly_commodities_sorted.iterrows():
     stock_data = CommoditiesWeeklyChange(
@@ -240,7 +246,7 @@ logging.info(f"Finished indexes weekly DB populating")
 import time
 import runpy
 
-print("5 seconds sleep after indexes weekly is done")
+logging.info("5 seconds sleep after indexes weekly is done")
 time.sleep(5)
 try:
     runpy.run_path(path_name=os.getenv("TG_BOT_PATH"))

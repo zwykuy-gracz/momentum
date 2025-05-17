@@ -78,6 +78,38 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
+def creating_list_of_tickers():
+    list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
+    list_of_indexes = [
+        "QQQ",
+        "SPY",
+        "DIA",
+        "IWM",
+        "DAX",
+        "EWQ",
+        "EWU",
+        "EWC",
+        "EWZ",
+        "ARGT",
+        "EWW",
+        "EWA",
+        "MCHI",
+        "KWEB",
+        "EWJ",
+        "EPI",
+        "EWY",
+        "EWT",
+        "EWH",
+        "EWS",
+    ]
+    list_of_commodities = ["GLD", "SLV", "COPX", "USO"]
+    list_of_tickers.extend(list_of_indexes)
+    list_of_tickers.extend(list_of_commodities)
+    logging.info(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
+    print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
+    return list_of_tickers
+
+
 def weekly_change(tickers, previous_day, last_friday):
     for ticker in tickers:
         try:
@@ -126,7 +158,7 @@ today = datetime.today().strftime("%A")
 last_friday = date.today() - timedelta(days=days_shift[today.lower()])
 
 previous_day = date.today() - timedelta(days=1)
-list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
+list_of_tickers = creating_list_of_tickers()
 weekly_change(list_of_tickers, previous_day, last_friday)
 
 query_result = (
