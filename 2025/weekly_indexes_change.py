@@ -1,4 +1,4 @@
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy import Float, Date
 from sqlalchemy.orm import sessionmaker, declarative_base
@@ -70,7 +70,7 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
-def weekly_index_change(tickers, last_friday, four_weeks_ago_friday, class_name):
+def weekly_index_change(tickers, last_friday, four_weeks_ago_friday):
     for ticker in tickers:
         try:
             last_friday_data = (
@@ -96,18 +96,58 @@ def weekly_index_change(tickers, last_friday, four_weeks_ago_friday, class_name)
                 / four_weeks_before_friday_data.close
             ) * 100
 
-            session.query(class_name).filter_by(ticker=ticker, date=last_friday).update(
-                {"four_week_pct_change": four_weeks_returns}
-            )
+            session.query(IndexesWeeklyChange).filter_by(
+                ticker=ticker, date=last_friday
+            ).update({"four_week_pct_change": four_weeks_returns})
 
             session.commit()
 
         except AttributeError:
             print("Bad ticker:", ticker)
             logging.error(
-                f"Bad ticker: {ticker} in counting 4 weeks {class_name} change"
+                f"Bad ticker: {ticker} in counting 4 weeks IndexesWeeklyChange change"
             )
-    logging.info(f"Finished 4 weeks {class_name} change populating")
+    logging.info(f"Finished 4 weeks IndexesWeeklyChange change populating")
+
+
+def weekly_commodity_change(tickers, last_friday, four_weeks_ago_friday):
+    for ticker in tickers:
+        try:
+            last_friday_data = (
+                session.query(SourceData)
+                .filter(
+                    SourceData.ticker == ticker,
+                    SourceData.date == last_friday,
+                )
+                .first()
+            )
+
+            four_weeks_before_friday_data = (
+                session.query(SourceData)
+                .filter(
+                    SourceData.ticker == ticker,
+                    SourceData.date == four_weeks_ago_friday,
+                )
+                .first()
+            )
+
+            four_weeks_returns = (
+                (last_friday_data.close - four_weeks_before_friday_data.close)
+                / four_weeks_before_friday_data.close
+            ) * 100
+
+            session.query(CommoditiesWeeklyChange).filter_by(
+                ticker=ticker, date=last_friday
+            ).update({"four_week_pct_change": four_weeks_returns})
+
+            session.commit()
+
+        except AttributeError:
+            print("Bad ticker:", ticker)
+            logging.error(
+                f"Bad ticker: {ticker} in counting 4 weeks CommoditiesWeeklyChange change"
+            )
+    logging.info(f"Finished 4 weeks CommoditiesWeeklyChange change populating")
 
 
 last_friday = date.today() - timedelta(days=1)
@@ -190,12 +230,8 @@ for _, row in df_weekly_commodities_sorted.iterrows():
 
 session.commit()
 
-weekly_index_change(
-    list_of_indexes, last_friday, four_weeks_ago_friday, IndexesWeeklyChange
-)
-weekly_index_change(
-    list_of_commodities, last_friday, four_weeks_ago_friday, CommoditiesWeeklyChange
-)
+weekly_index_change(list_of_indexes, last_friday, four_weeks_ago_friday)
+weekly_commodity_change(list_of_commodities, last_friday, four_weeks_ago_friday)
 
 session.close()
 
