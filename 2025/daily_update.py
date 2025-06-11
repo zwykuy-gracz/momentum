@@ -441,6 +441,34 @@ def check_above_below_sma(tickers, last_date):
     print("Above/below SMAs counted")
 
 
+def temp_func_check_SMAs():
+    df = pd.DataFrame(columns=["ticker", "SMA50"])
+    nasdaq_list_of_tickers = [
+        t.ticker
+        for t in session.query(TickersList5B)
+        .filter(TickersList5B.nasdaq_tickers == True)
+        .all()
+    ]
+    for ticker in nasdaq_list_of_tickers:
+        time.sleep(0.25)
+        try:
+            stock_ticker = TA_Handler(
+                symbol=ticker,
+                screener="america",
+                exchange="NASDAQ",
+                interval=Interval.INTERVAL_1_DAY,
+            )
+            indicators = stock_ticker.get_analysis().indicators
+            df.loc[len(df)] = (ticker, indicators["SMA50"])
+            df = df.dropna()
+            df.to_csv("SMAs.csv", index=False)
+            # print(f"{ticker}: {indicators['SMA50']}")
+
+        except Exception as e:
+            print(f"Error with {ticker} in populating Nasdaq SMAs/Bad ticker {e}")
+    print("Nasdaq SMAa populated")
+
+
 def main():
     try:
         previous_day = date.today() - timedelta(days=1)
@@ -478,11 +506,13 @@ def main():
 
 
 if __name__ == "__main__":
-    engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
+    # engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
+    engine = create_engine(os.getenv("DB_STOCK_DATA"))
     # Base.metadata.create_all(engine)
 
     Session = sessionmaker(bind=engine)
     session = Session()
-    main()
+    temp_func_check_SMAs()
+    # main()
 
     session.close()
