@@ -309,7 +309,7 @@ def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
         .all()
     ]
     for ticker in nasdaq_list_of_tickers:
-        time.sleep(0.15)
+        time.sleep(1.5)
         try:
             stock_ticker = TA_Handler(
                 symbol=ticker,
@@ -347,7 +347,7 @@ def nyse_counting_and_populating_DB_with_SMAs(last_date):
         .all()
     ]
     for ticker in nyse_list_of_tickers:
-        time.sleep(0.15)
+        time.sleep(1.5)
         try:
             stock_ticker = TA_Handler(
                 symbol=ticker,
