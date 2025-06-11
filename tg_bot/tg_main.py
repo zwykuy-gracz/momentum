@@ -62,32 +62,6 @@ class YTD20Worst(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.ytd_worst})>"
 
 
-class PreviousCorrectionBest(Base):
-    __tablename__ = "previous_correction_best"
-
-    id = Column(Integer, primary_key=True)
-    benchmark_date = Column(Date, nullable=False)
-    date = Column(Date, nullable=False)
-    ticker = Column(String, nullable=False, index=True)
-    pct_change = Column(Float, nullable=True)
-
-    def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}', date='{self.date}')>"
-
-
-class PreviousCorrectionWorst(Base):
-    __tablename__ = "previous_correction_worst"
-
-    id = Column(Integer, primary_key=True)
-    benchmark_date = Column(Date, nullable=False)
-    date = Column(Date, nullable=False)
-    ticker = Column(String, nullable=False, index=True)
-    pct_change = Column(Float, nullable=True)
-
-    def __repr__(self):
-        return f"<StockData(ticker='{self.ticker}', date='{self.date}')>"
-
-
 class LastCorrectionBest(Base):
     __tablename__ = "last_correction_best"
 
@@ -243,58 +217,6 @@ async def ytd_bottom20(context: ContextTypes.DEFAULT_TYPE):
         logger.error("ytd_bottom20 Error: %s", e)
 
 
-async def previous_correction_top20(context: ContextTypes.DEFAULT_TYPE):
-    try:
-        query_result = (
-            session.query(
-                PreviousCorrectionBest.date,
-                PreviousCorrectionBest.ticker,
-                PreviousCorrectionBest.pct_change,
-            )
-            .filter(PreviousCorrectionBest.date == previous_day)
-            .all()
-        )
-        previous_correction_best_msg = (
-            f"Best performing stocks since November 5th as of {previous_day}\n\n"
-        )
-        for q in query_result:
-            previous_correction_best_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
-        await context.bot.send_message(
-            chat_id=os.getenv("CJT_GROUP_ID"),
-            message_thread_id=os.getenv("TICKER_BOT_ROOM"),
-            text=previous_correction_best_msg,
-        )
-        logging.info("previous_correction_top20 successly sent")
-    except Exception as e:
-        logger.error("previous_correction_top20 Error: %s", e)
-
-
-async def previous_correction_bottom20(context: ContextTypes.DEFAULT_TYPE):
-    try:
-        query_result = (
-            session.query(
-                PreviousCorrectionWorst.date,
-                PreviousCorrectionWorst.ticker,
-                PreviousCorrectionWorst.pct_change,
-            )
-            .filter(PreviousCorrectionWorst.date == previous_day)
-            .all()
-        )
-        previous_correction_worst_msg = (
-            f"Worst performing stocks since November 5th as of {previous_day}\n\n"
-        )
-        for q in query_result:
-            previous_correction_worst_msg += f"{q.ticker}: {round(q.pct_change,2)}%\n"
-        await context.bot.send_message(
-            chat_id=os.getenv("CJT_GROUP_ID"),
-            message_thread_id=os.getenv("TICKER_BOT_ROOM"),
-            text=previous_correction_worst_msg,
-        )
-        logging.info("previous_correction_bottom20 successly sent")
-    except Exception as e:
-        logger.error("previous_correction_bottom20 Error: %s", e)
-
-
 async def last_correction_top20(context: ContextTypes.DEFAULT_TYPE):
     try:
         query_result = (
@@ -409,8 +331,9 @@ async def weekly_indexes(context: ContextTypes.DEFAULT_TYPE):
             .all()
         )
         weekly_indexes_msg = "This week indexes performance:\n\n"
+        weekly_indexes_msg += "          1W  |  4Ws\n"
         for qi in query_result_indexes:
-            weekly_indexes_msg += f"{qi.ticker}. 1W: {round(qi.one_week_pct_change,2)}% 4Ws: {round(qi.four_week_pct_change,2)}%\n"
+            weekly_indexes_msg += f"{qi.ticker}: {round(qi.one_week_pct_change,2)}% | {round(qi.four_week_pct_change,2)}%\n"
 
         # ------COMMODITIES---------
         query_result_commodities = (
@@ -424,8 +347,9 @@ async def weekly_indexes(context: ContextTypes.DEFAULT_TYPE):
             .all()
         )
         weekly_indexes_msg += "\n\nThis week commodities performance:\n\n"
+        weekly_indexes_msg += "          1W  |  4Ws\n"
         for qc in query_result_commodities:
-            weekly_indexes_msg += f"{qc.ticker}. 1W: {round(qc.one_week_pct_change,2)}% 4Ws: {round(qc.four_week_pct_change,2)}%\n"
+            weekly_indexes_msg += f"{qc.ticker}: {round(qc.one_week_pct_change,2)}% | {round(qc.four_week_pct_change,2)}%\n"
 
         await context.bot.send_message(
             chat_id=os.getenv("CJT_GROUP_ID"),
@@ -464,8 +388,6 @@ job_queue.run_once(weekly_top20, 3)
 job_queue.run_once(weekly_bottom20, 5)
 job_queue.run_once(ytd_top20, 7)
 job_queue.run_once(ytd_bottom20, 10)
-# job_queue.run_once(previous_correction_top20, 13)
-# job_queue.run_once(previous_correction_bottom20, 16)
 job_queue.run_once(last_correction_top20, 13)
 job_queue.run_once(last_correction_bottom20, 16)
 job_queue.run_once(market_breadth, 19)
