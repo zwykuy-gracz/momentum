@@ -15,7 +15,7 @@ from sqlalchemy import (
     case,
 )
 from sqlalchemy.orm import sessionmaker, declarative_base
-from tradingview_ta import TA_Handler, Interval
+from tradingview_ta import TA_Handler, Interval, get_multiple_analysis
 from sqlalchemy.sql import and_
 import os
 import time
@@ -302,76 +302,70 @@ def counting_and_populating_ytd_corrections_return(tickers, last_date):
 
 def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
     logging.info("Nasdaq SMAa calculations started.")
+    nasdaq_ta_symbols = []
+    nasdaq_string_ticker = "NASDAQ:"
     nasdaq_list_of_tickers = [
         t.ticker
         for t in session.query(TickersList5B)
         .filter(TickersList5B.nasdaq_tickers == True)
         .all()
     ]
-    for ticker in nasdaq_list_of_tickers:
-        time.sleep(1.5)
-        try:
-            stock_ticker = TA_Handler(
-                symbol=ticker,
-                screener="america",
-                exchange="NASDAQ",
-                interval=Interval.INTERVAL_1_DAY,
-            )
-            indicators = stock_ticker.get_analysis().indicators
-            session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"ma50": indicators["SMA50"]}
-            )
-            session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"ma100": indicators["SMA100"]}
-            )
-            session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"ma200": indicators["SMA200"]}
-            )
-            session.commit()
 
-        except Exception as e:
-            logging.error(
-                f"Error with {ticker} in populating Nasdaq SMAs/Bad ticker {e}",
-                exc_info=True,
-            )
+    for ticker in nasdaq_list_of_tickers:
+        nasdaq_ta_symbols.append(nasdaq_string_ticker + ticker)
+
+    nasdaq_analysis = get_multiple_analysis(
+        screener="america", interval=Interval.INTERVAL_1_DAY, symbols=nasdaq_ta_symbols
+    )
+
+    for ticker, indicator in nasdaq_analysis.items():
+
+        session.query(StockData).filter_by(
+            ticker=ticker.split(":")[1], date=last_date
+        ).update({"ma50": indicator.indicators["SMA50"]})
+        session.query(StockData).filter_by(
+            ticker=ticker.split(":")[1], date=last_date
+        ).update({"ma100": indicator.indicators["SMA100"]})
+        session.query(StockData).filter_by(
+            ticker=ticker.split(":")[1], date=last_date
+        ).update({"ma200": indicator.indicators["SMA200"]})
+        session.commit()
+
     logging.info("Nasdaq SMAa populated successfully.")
     print("Nasdaq SMAa populated")
 
 
 def nyse_counting_and_populating_DB_with_SMAs(last_date):
     logging.info("Nyse SMAa calculations started.")
+    nyse_ta_symbols = []
+    nyse_string_ticker = "NYSE:"
     nyse_list_of_tickers = [
         t.ticker
         for t in session.query(TickersList5B)
         .filter(TickersList5B.nyse_tickers == True)
         .all()
     ]
-    for ticker in nyse_list_of_tickers:
-        time.sleep(1.5)
-        try:
-            stock_ticker = TA_Handler(
-                symbol=ticker,
-                screener="america",
-                exchange="NYSE",
-                interval=Interval.INTERVAL_1_DAY,
-            )
-            indicators = stock_ticker.get_analysis().indicators
-            session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"ma50": indicators["SMA50"]}
-            )
-            session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"ma100": indicators["SMA100"]}
-            )
-            session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"ma200": indicators["SMA200"]}
-            )
-            session.commit()
 
-        except Exception as e:
-            logging.error(
-                f"Error with {ticker} in populating Nyse SMAs/Bad ticker {e}",
-                exc_info=True,
-            )
+    for ticker in nyse_list_of_tickers:
+        nyse_ta_symbols.append(nyse_string_ticker + ticker)
+
+    nyse_analysis = get_multiple_analysis(
+        screener="america", interval=Interval.INTERVAL_1_DAY, symbols=nyse_ta_symbols
+    )
+
+    for ticker, indicator in nyse_analysis.items():
+
+        session.query(StockData).filter_by(
+            ticker=ticker.split(":")[1], date=last_date
+        ).update({"ma50": indicator.indicators["SMA50"]})
+        session.query(StockData).filter_by(
+            ticker=ticker.split(":")[1], date=last_date
+        ).update({"ma100": indicator.indicators["SMA100"]})
+        session.query(StockData).filter_by(
+            ticker=ticker.split(":")[1], date=last_date
+        ).update({"ma200": indicator.indicators["SMA200"]})
+        session.commit()
+
     logging.info("Nyse SMAa populated successfully.")
     print("Nyse SMAa populated")
 
@@ -457,7 +451,6 @@ def main():
             )
 
             nasdaq_counting_and_populating_DB_with_SMAs(previous_day)
-            # It takes about 270 sec
             nyse_counting_and_populating_DB_with_SMAs(previous_day)
 
             check_above_below_sma(list_of_tickers, previous_day)
