@@ -319,17 +319,19 @@ def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
     )
 
     for ticker, indicator in nasdaq_analysis.items():
-
-        session.query(StockData).filter_by(
-            ticker=ticker.split(":")[1], date=last_date
-        ).update({"ma50": indicator.indicators["SMA50"]})
-        session.query(StockData).filter_by(
-            ticker=ticker.split(":")[1], date=last_date
-        ).update({"ma100": indicator.indicators["SMA100"]})
-        session.query(StockData).filter_by(
-            ticker=ticker.split(":")[1], date=last_date
-        ).update({"ma200": indicator.indicators["SMA200"]})
-        session.commit()
+        try:
+            session.query(StockData).filter_by(
+                ticker=ticker.split(":")[1], date=last_date
+            ).update({"ma50": indicator.indicators["SMA50"]})
+            session.query(StockData).filter_by(
+                ticker=ticker.split(":")[1], date=last_date
+            ).update({"ma100": indicator.indicators["SMA100"]})
+            session.query(StockData).filter_by(
+                ticker=ticker.split(":")[1], date=last_date
+            ).update({"ma200": indicator.indicators["SMA200"]})
+            session.commit()
+        except AttributeError as e:
+            logging.error(f"Error with {ticker} in SMAs: {e}", exc_info=True)
 
     logging.info("Nasdaq SMAa populated successfully.")
     print("Nasdaq SMAa populated")
@@ -354,17 +356,19 @@ def nyse_counting_and_populating_DB_with_SMAs(last_date):
     )
 
     for ticker, indicator in nyse_analysis.items():
-
-        session.query(StockData).filter_by(
-            ticker=ticker.split(":")[1], date=last_date
-        ).update({"ma50": indicator.indicators["SMA50"]})
-        session.query(StockData).filter_by(
-            ticker=ticker.split(":")[1], date=last_date
-        ).update({"ma100": indicator.indicators["SMA100"]})
-        session.query(StockData).filter_by(
-            ticker=ticker.split(":")[1], date=last_date
-        ).update({"ma200": indicator.indicators["SMA200"]})
-        session.commit()
+        try:
+            session.query(StockData).filter_by(
+                ticker=ticker.split(":")[1], date=last_date
+            ).update({"ma50": indicator.indicators["SMA50"]})
+            session.query(StockData).filter_by(
+                ticker=ticker.split(":")[1], date=last_date
+            ).update({"ma100": indicator.indicators["SMA100"]})
+            session.query(StockData).filter_by(
+                ticker=ticker.split(":")[1], date=last_date
+            ).update({"ma200": indicator.indicators["SMA200"]})
+            session.commit()
+        except AttributeError as e:
+            logging.error(f"Error with {ticker} in SMAs: {e}", exc_info=True)
 
     logging.info("Nyse SMAa populated successfully.")
     print("Nyse SMAa populated")
