@@ -152,7 +152,7 @@ def weekly_commodity_change(tickers, last_friday, four_weeks_ago_friday):
 
 last_friday = date.today() - timedelta(days=1)
 previous_friday = date.today() - timedelta(days=8)
-four_weeks_ago_friday = date.today() - timedelta(days=30)
+four_weeks_ago_friday = date.today() - timedelta(days=29)
 print(last_friday)
 print(four_weeks_ago_friday)
 
