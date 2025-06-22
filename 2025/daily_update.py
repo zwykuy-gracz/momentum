@@ -73,6 +73,18 @@ class StockData(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.close})>"
 
 
+class TickersList2B(Base):
+    __tablename__ = "list_of_tickers_lt_2B"
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String, nullable=False, index=True)
+    nasdaq_tickers = Column(Boolean, nullable=False)
+    nyse_tickers = Column(Boolean, nullable=False)
+
+    def __repr__(self):
+        return f"<StockPrice(ticker='{self.ticker}')>"
+
+
 class TickersList5B(Base):
     __tablename__ = "list_of_tickers_lt_5B"
 
@@ -85,7 +97,14 @@ class TickersList5B(Base):
         return f"<StockPrice(ticker='{self.ticker}')>"
 
 
-def creating_list_of_tickers():
+def creating_list_of_tickers_2B():
+    list_of_tickers = [t.ticker for t in session.query(TickersList2B).all()]
+    logging.info(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
+    print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
+    return list_of_tickers
+
+
+def creating_list_of_tickers_5B():
     list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
     list_of_indexes = [
         "QQQ",
@@ -444,20 +463,21 @@ def main():
         previous_day = date.today() - timedelta(days=1)
         print(f"Working on date: {previous_day}")
         logging.info(f"Working on date: {previous_day}")
-        list_of_tickers = creating_list_of_tickers()
+        list_of_tickers_2B = creating_list_of_tickers_2B()
+        list_of_tickers_5B = creating_list_of_tickers_5B()
 
-        download_tickers_from_yf(list_of_tickers, previous_day)
+        download_tickers_from_yf(list_of_tickers_2B, previous_day)
         read_df_from_csv_and_populate_db(previous_day)
         number_of_new_records_in_DB = daily_count_new_records(previous_day)
         if number_of_new_records_in_DB > 0:
             counting_and_populating_ytd_corrections_return(
-                list_of_tickers, previous_day
+                list_of_tickers_5B, previous_day
             )
 
             nasdaq_counting_and_populating_DB_with_SMAs(previous_day)
             nyse_counting_and_populating_DB_with_SMAs(previous_day)
 
-            check_above_below_sma(list_of_tickers, previous_day)
+            check_above_below_sma(list_of_tickers_5B, previous_day)
 
             logging.info("All steps completed successfully.")
 
