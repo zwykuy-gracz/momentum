@@ -155,8 +155,7 @@ if len(query_result_mb) > 0:
     logging.info("5 seconds sleep before creating chart")
     time.sleep(5)
     try:
-        runpy.run_path(path_name=os.getenv("YTD_CORRECTIONS_PATH"))
-        # runpy.run_path(path_name=os.getenv("CHART_CREATION_PATH"))
+        runpy.run_path(path_name=os.getenv("CHART_CREATION_PATH"))
     except Exception as e:
         logging.error(
             f"Error in reaching CHART_CREATION_PATH script: {e}", exc_info=True
