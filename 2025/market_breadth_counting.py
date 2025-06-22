@@ -1,14 +1,8 @@
 import logging
 from datetime import date, timedelta
-from sqlalchemy import (
-    create_engine,
-    Column,
-    Integer,
-    Float,
-    Date,
-    Boolean,
-)
+from sqlalchemy import create_engine, Column, Integer, Float, Date, Boolean, String
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.sql import and_
 import os
 import time
 import runpy
@@ -65,6 +59,18 @@ class MarketBreadth(Base):
         return f"<StockData(date='{self.date}')>"
 
 
+class TickersList5B(Base):
+    __tablename__ = "list_of_tickers_lt_5B"
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String, nullable=False, index=True)
+    nasdaq_tickers = Column(Boolean, nullable=False)
+    nyse_tickers = Column(Boolean, nullable=False)
+
+    def __repr__(self):
+        return f"<StockPrice(ticker='{self.ticker}')>"
+
+
 engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
 # Base.metadata.create_all(engine)
 
@@ -81,8 +87,14 @@ def get_change(above, number_of_tickers):
         return 0
 
 
+list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
 previous_day = date.today() - timedelta(days=1)
-query_ma = session.query(StockData).filter(StockData.date == previous_day).all()
+query_ma = (
+    session.query(StockData)
+    .filter(and_(StockData.ticker.in_(list_of_tickers), StockData.date == previous_day))
+    .all()
+)
+
 logging.info(f"Number of stocks: {len(query_ma)}")
 # ------ 50
 above50 = 0
@@ -159,5 +171,11 @@ if len(query_result_mb) > 0:
         logging.error(
             f"Error in reaching CHART_CREATION_PATH script: {e}", exc_info=True
         )
+else:
+    logging.info("Market Breadth didn't work out")
+    logging.info("5 seconds sleep before counting YTD Corrections")
+    time.sleep(5)
+    runpy.run_path(path_name=os.getenv("YTD_CORRECTIONS_PATH"))
+
 
 session.close()
