@@ -119,7 +119,8 @@ engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
 Session = sessionmaker(bind=engine)
 session = Session()
 
-previous_day = date.today() - timedelta(days=1)
+# previous_day = date.today() - timedelta(days=1)
+previous_day = date(2025, 6, 20)
 query_result = (
     session.query(
         StockData.date,

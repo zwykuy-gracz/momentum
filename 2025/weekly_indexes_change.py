@@ -150,9 +150,9 @@ def weekly_commodity_change(tickers, last_friday, four_weeks_ago_friday):
     logging.info(f"Finished 4 weeks CommoditiesWeeklyChange change populating")
 
 
-last_friday = date.today() - timedelta(days=1)
-previous_friday = date.today() - timedelta(days=8)
-four_weeks_ago_friday = date.today() - timedelta(days=29)
+last_friday = date.today() - timedelta(days=2)
+previous_friday = date.today() - timedelta(days=9)
+four_weeks_ago_friday = date.today() - timedelta(days=30)
 print(last_friday)
 print(four_weeks_ago_friday)
 
@@ -246,9 +246,9 @@ logging.info(f"Finished indexes weekly DB populating")
 import time
 import runpy
 
-logging.info("5 seconds sleep after indexes weekly is done")
-time.sleep(5)
-try:
-    runpy.run_path(path_name=os.getenv("TG_BOT_PATH"))
-except Exception as e:
-    logging.error(f"Error in running tg_bot.py: {e}")
+# logging.info("5 seconds sleep after indexes weekly is done")
+# time.sleep(5)
+# try:
+#     runpy.run_path(path_name=os.getenv("TG_BOT_PATH"))
+# except Exception as e:
+#     logging.error(f"Error in running tg_bot.py: {e}")

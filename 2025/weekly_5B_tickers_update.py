@@ -20,10 +20,10 @@ Base = declarative_base()
 WORKFLOW:
 0. Download data for all Nasdaq and Nyse tickers from https://www.nasdaq.com/market-activity/stocks/screener
 1. Create DF with tickers and Market 
-2. Update market_cap in table list_of_tickers_lt_1B
+2. Update market_cap in table list_of_tickers_lt_2B
 3. Select tickers with market_cap > 5B
 4. Delete all records from table list_of_tickers_lt_5B
-5. Populate table list_of_tickers_lt_5B with tickers with market_cap > 5B - copy from list_of_tickers_lt_1B
+5. Populate table list_of_tickers_lt_5B with tickers with market_cap > 5B - copy from list_of_tickers_lt_2B
 """
 
 
@@ -39,8 +39,8 @@ class TickersList5B(Base):
         return f"<StockPrice(ticker='{self.ticker}')>"
 
 
-class TickersList1B(Base):
-    __tablename__ = "list_of_tickers_lt_1B"
+class TickersList2B(Base):
+    __tablename__ = "list_of_tickers_lt_2B"
 
     id = Column(Integer, primary_key=True)
     ticker = Column(String, nullable=False, index=True)
@@ -64,22 +64,22 @@ def query_db_length_before():
 
 
 # Step 1: Create DF with tickers and Market Cap
-def create_df_lt_1B(filename):
+def create_df_lt_2B(filename):
     try:
         df_csv = pd.read_csv(filename)
         df = df_csv.dropna(subset=["Market Cap"], inplace=False)
-        df_one_bill = df[df["Market Cap"] >= 1_000_000_000]
-        df_ticker_MC = df_one_bill[["Symbol", "Market Cap"]]
+        df_two_bills = df[df["Market Cap"] >= 2_000_000_000]
+        df_ticker_MC = df_two_bills[["Symbol", "Market Cap"]]
         logging.info("DF with tickers and Market Cap created")
         return df_ticker_MC
     except Exception as e:
         logging.error(f"Step1 Error {e}")
 
 
-# Step 2: Update market_cap in table list_of_tickers_lt_1B
+# Step 2: Update market_cap in table list_of_tickers_lt_2B
 def update_market_cap(df):
     for _, row in df.iterrows():
-        session.query(TickersList1B).filter_by(ticker=row["Symbol"]).update(
+        session.query(TickersList2B).filter_by(ticker=row["Symbol"]).update(
             {"market_cap": row["Market Cap"]}
         )
 
@@ -90,8 +90,8 @@ def update_market_cap(df):
 # Step 3: Select tickers with market_cap > 5B
 def select_lt_5B():
     lt_5B = (
-        session.query(TickersList1B)
-        .filter(TickersList1B.market_cap > 5_000_000_000)
+        session.query(TickersList2B)
+        .filter(TickersList2B.market_cap > 5_000_000_000)
         .all()
     )
     logging.info("Tickers with market_cap > 5B selected")
@@ -105,7 +105,7 @@ def delete_lt_5B():
     logging.info("All records deleted")
 
 
-# Step 5: Populate table list_of_tickers_lt_5B with tickers with market_cap > 5B - copy from list_of_tickers_lt_1B
+# Step 5: Populate table list_of_tickers_lt_5B with tickers with market_cap > 5B - copy from list_of_tickers_lt_2B
 def populate_lt_5B(lt_5B):
     for ticker in lt_5B:
         stock_price = TickersList5B(
@@ -129,8 +129,8 @@ def main():
     # TODO: Add check if == 1
     number_files = os.listdir(os.getenv("WEEKLY_TICKERS_UPDATE_PATH"))
     uri = f"{os.getenv('WEEKLY_TICKERS_UPDATE_PATH')}/{number_files[0]}"
-    df_1B_ticker_MC = create_df_lt_1B(uri)
-    update_market_cap(df_1B_ticker_MC)
+    df_2B_ticker_MC = create_df_lt_2B(uri)
+    update_market_cap(df_2B_ticker_MC)
     lt_5B_tickers = select_lt_5B()
     delete_lt_5B()
     populate_lt_5B(lt_5B_tickers)

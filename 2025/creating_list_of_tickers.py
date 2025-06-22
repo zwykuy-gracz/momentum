@@ -3,9 +3,6 @@ from sqlalchemy import Boolean, Table, MetaData
 from sqlalchemy.orm import sessionmaker, declarative_base
 import pandas as pd
 import os
-import yfinance as yf
-from datetime import date
-from tradingview_ta import TA_Handler, Interval
 from sqlalchemy import and_
 from dotenv import load_dotenv
 
@@ -13,28 +10,17 @@ load_dotenv()
 
 
 Base = declarative_base()
+# metadata = MetaData()
 
 
-class TickersList(Base):
-    __tablename__ = "list_of_tickers"
-
-    id = Column(Integer, primary_key=True)
-    ticker = Column(String, nullable=False, index=True)
-    nasdaq_tickers = Column(String, nullable=False)
-    nyse_tickers = Column(String, nullable=False)
-
-    def __repr__(self):
-        return f"<StockPrice(ticker='{self.ticker}')>"
-
-
-class TickersList1B(Base):
-    __tablename__ = "list_of_tickers_lt_1B"
+class TickersList2B(Base):
+    __tablename__ = "list_of_tickers_lt_2B"
 
     id = Column(Integer, primary_key=True)
     ticker = Column(String, nullable=False, index=True)
     market_cap = Column(Float, nullable=False)
-    nasdaq_tickers = Column(Boolean, nullable=False)
-    nyse_tickers = Column(Boolean, nullable=False)
+    nasdaq_tickers = Column(String, nullable=False)
+    nyse_tickers = Column(String, nullable=False)
 
     def __repr__(self):
         return f"<StockPrice(ticker='{self.ticker}')>"
@@ -57,7 +43,7 @@ class StockData(Base):
 
 
 engine = create_engine(os.getenv("DB_STOCK_DATA"))
-# Base.metadata.create_all(engine)
+Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -75,9 +61,9 @@ Populating DB with tickers step by step
 def create_tickers_file(filename):
     df_csv = pd.read_csv(filename)
     df = df_csv.dropna(subset=["Market Cap"], inplace=False)
-    df_one_bill = df[df["Market Cap"] >= 1_000_000_000]
-    df_ticker_MC = df_one_bill[["Symbol", "Market Cap"]]
-    tickers = list(df_one_bill["Symbol"])
+    df_two_bills = df[df["Market Cap"] >= 2_000_000_000]
+    df_ticker_MC = df_two_bills[["Symbol", "Market Cap"]]
+    tickers = list(df_two_bills["Symbol"])
     print("Step 1 done")
     return df_ticker_MC
 
@@ -86,7 +72,7 @@ def create_tickers_file(filename):
 def populate_db_with_tickers_MC(df):
 
     for _, row in df.iterrows():
-        stock_price = TickersList1B(
+        stock_price = TickersList2B(
             ticker=row["Symbol"],
             market_cap=row["Market Cap"],
             nasdaq_tickers=False,
@@ -98,19 +84,19 @@ def populate_db_with_tickers_MC(df):
     print("Step 2 done")
 
 
-# df_1B = create_tickers_file("nasdaq_screener_1738619645494.csv")
-# populate_db_with_tickers_MC(df_1B)
+# df_2B = create_tickers_file("nasdaq_screener_1750065150281.csv")
+# populate_db_with_tickers_MC(df_2B)
 
 # 3. Update nasdaq_tickers and nyse_tickers to True for Nasdaq and Nyse tickers
-df_nasdaq = pd.read_csv("nasdaq_screener_lt_2b.csv")
-for i in list(df_nasdaq["Symbol"]):
-    session.query(TickersList1B).filter(TickersList1B.ticker == i).update(
+df_nasdaq = pd.read_csv("nasdaq_lt_2B.csv")
+for ticker in list(df_nasdaq["Symbol"]):
+    session.query(TickersList2B).filter(TickersList2B.ticker == ticker).update(
         {"nasdaq_tickers": True}
     )
 # session.commit()
-df_nyse = pd.read_csv("nyse_screener_lt_2b.csv")
-for i in list(df_nyse["Symbol"]):
-    session.query(TickersList1B).filter(TickersList1B.ticker == i).update(
+df_nyse = pd.read_csv("nyse_lt_2B.csv")
+for ticker in list(df_nyse["Symbol"]):
+    session.query(TickersList2B).filter(TickersList2B.ticker == ticker).update(
         {"nyse_tickers": True}
     )
 # session.commit()
@@ -118,9 +104,9 @@ print("Step 3 done")
 
 # 4. Delete tickers that are not Nasdaq or Nyse
 results = (
-    session.query(TickersList1B)
+    session.query(TickersList2B)
     .filter(
-        and_(TickersList1B.nasdaq_tickers == False, TickersList1B.nyse_tickers == False)
+        and_(TickersList2B.nasdaq_tickers == False, TickersList2B.nyse_tickers == False)
     )
     .delete()
 )

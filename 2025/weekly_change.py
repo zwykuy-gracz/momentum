@@ -206,7 +206,7 @@ print("5 seconds sleep after weekly is done")
 time.sleep(5)
 today = datetime.today().strftime("%A")
 try:
-    if today.lower() == "saturday":
+    if today.lower() == "sunday":
         runpy.run_path(path_name=os.getenv("WEEKLY_INDEXES_CHANGE_PATH"))
     else:
         runpy.run_path(path_name=os.getenv("TG_BOT_PATH"))

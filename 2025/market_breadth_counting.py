@@ -81,7 +81,8 @@ def get_change(above, number_of_tickers):
         return 0
 
 
-previous_day = date.today() - timedelta(days=1)
+# previous_day = date.today() - timedelta(days=1)
+previous_day = date(2025, 6, 20)
 query_ma = session.query(StockData).filter(StockData.date == previous_day).all()
 logging.info(f"Number of stocks: {len(query_ma)}")
 # ------ 50
@@ -154,7 +155,8 @@ if len(query_result_mb) > 0:
     logging.info("5 seconds sleep before creating chart")
     time.sleep(5)
     try:
-        runpy.run_path(path_name=os.getenv("CHART_CREATION_PATH"))
+        runpy.run_path(path_name=os.getenv("YTD_CORRECTIONS_PATH"))
+        # runpy.run_path(path_name=os.getenv("CHART_CREATION_PATH"))
     except Exception as e:
         logging.error(
             f"Error in reaching CHART_CREATION_PATH script: {e}", exc_info=True
