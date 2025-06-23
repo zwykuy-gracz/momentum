@@ -248,71 +248,102 @@ def daily_count_new_records(last_date):
 def counting_and_populating_ytd_corrections_return(tickers, last_date):
     logging.info("YTD, corrections calculations started.")
     for ticker in tickers:
-        try:
-            last_day_closing_price = (
-                session.query(StockData)
-                .filter(
-                    StockData.ticker == ticker,
-                    StockData.date == last_date,
+        last_day_closing_price = (
+            session.query(StockData)
+            .filter(
+                StockData.ticker == ticker,
+                StockData.date == last_date,
+            )
+            .first()
+        )
+        if last_day_closing_price:
+            try:
+                year_opening_price = (
+                    session.query(StockData)
+                    .filter(
+                        StockData.ticker == ticker,
+                        StockData.date == YTD_DATE,
+                    )
+                    .first()
                 )
-                .first()
-            )
 
-            year_opening_price = (
-                session.query(StockData)
-                .filter(
-                    StockData.ticker == ticker,
-                    StockData.date == YTD_DATE,
+                ytd_return = (
+                    (last_day_closing_price.close - year_opening_price.open)
+                    / year_opening_price.open
+                ) * 100
+                session.query(StockData).filter_by(
+                    ticker=ticker, date=last_date
+                ).update({"ytd": ytd_return})
+
+                session.commit()
+                logging.info(f"YTD calculations for {ticker} completed successfully.")
+            except AttributeError as e:
+                logging.error(
+                    f"Error with {ticker} in YTD calculations: {e}", exc_info=True
                 )
-                .first()
-            )
 
-            previous_correction_opening_price = (
-                session.query(StockData)
-                .filter(
-                    StockData.ticker == ticker,
-                    StockData.date == PREVIOUS_CORRECTION_DATE,
+            try:
+                previous_correction_opening_price = (
+                    session.query(StockData)
+                    .filter(
+                        StockData.ticker == ticker,
+                        StockData.date == PREVIOUS_CORRECTION_DATE,
+                    )
+                    .first()
                 )
-                .first()
-            )
 
-            last_correction_opening_price = (
-                session.query(StockData)
-                .filter(
-                    StockData.ticker == ticker,
-                    StockData.date == LAST_CORRECTION_DATE,
+                previous_correction_return = (
+                    (
+                        last_day_closing_price.close
+                        - previous_correction_opening_price.open
+                    )
+                    / previous_correction_opening_price.open
+                ) * 100
+                session.query(StockData).filter_by(
+                    ticker=ticker, date=last_date
+                ).update({"previous_correction": previous_correction_return})
+
+                session.commit()
+                logging.info(
+                    f"Previous correction for {ticker} calculations completed successfully."
                 )
-                .first()
-            )
+            except AttributeError as e:
+                logging.error(
+                    f"Error with {ticker} in Previous correction calculations: {e}",
+                    exc_info=True,
+                )
 
-            ytd_return = (
-                (last_day_closing_price.close - year_opening_price.open)
-                / year_opening_price.open
-            ) * 100
-            session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"ytd": ytd_return}
-            )
+            try:
+                last_correction_opening_price = (
+                    session.query(StockData)
+                    .filter(
+                        StockData.ticker == ticker,
+                        StockData.date == LAST_CORRECTION_DATE,
+                    )
+                    .first()
+                )
 
-            previous_correction_return = (
-                (last_day_closing_price.close - previous_correction_opening_price.open)
-                / previous_correction_opening_price.open
-            ) * 100
-            session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"previous_correction": previous_correction_return}
-            )
+                last_correction_return = (
+                    (last_day_closing_price.close - last_correction_opening_price.open)
+                    / last_correction_opening_price.open
+                ) * 100
+                session.query(StockData).filter_by(
+                    ticker=ticker, date=last_date
+                ).update({"last_correction": last_correction_return})
 
-            last_correction_return = (
-                (last_day_closing_price.close - last_correction_opening_price.open)
-                / last_correction_opening_price.open
-            ) * 100
-            session.query(StockData).filter_by(ticker=ticker, date=last_date).update(
-                {"last_correction": last_correction_return}
-            )
-
-            session.commit()
-        except AttributeError as e:
+                session.commit()
+                logging.info(
+                    f"Last correction for {ticker} calculations completed successfully."
+                )
+            except AttributeError as e:
+                logging.error(
+                    f"Error with {ticker} in Last correction calculations: {e}",
+                    exc_info=True,
+                )
+        else:
             logging.error(
-                f"Error with {ticker} in YTD calculations: {e}", exc_info=True
+                f"Couldn't find last price {ticker}. Error: {e}",
+                exc_info=True,
             )
 
     logging.info("YTD, corrections calculations completed successfully.")
