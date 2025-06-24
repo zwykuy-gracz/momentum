@@ -276,7 +276,6 @@ def counting_and_populating_ytd_corrections_return(tickers, last_date):
                 ).update({"ytd": ytd_return})
 
                 session.commit()
-                logging.info(f"YTD calculations for {ticker} completed successfully.")
             except AttributeError as e:
                 logging.error(
                     f"Error with {ticker} in YTD calculations: {e}", exc_info=True
@@ -304,9 +303,6 @@ def counting_and_populating_ytd_corrections_return(tickers, last_date):
                 ).update({"previous_correction": previous_correction_return})
 
                 session.commit()
-                logging.info(
-                    f"Previous correction for {ticker} calculations completed successfully."
-                )
             except AttributeError as e:
                 logging.error(
                     f"Error with {ticker} in Previous correction calculations: {e}",
@@ -332,9 +328,6 @@ def counting_and_populating_ytd_corrections_return(tickers, last_date):
                 ).update({"last_correction": last_correction_return})
 
                 session.commit()
-                logging.info(
-                    f"Last correction for {ticker} calculations completed successfully."
-                )
             except AttributeError as e:
                 logging.error(
                     f"Error with {ticker} in Last correction calculations: {e}",
@@ -342,7 +335,7 @@ def counting_and_populating_ytd_corrections_return(tickers, last_date):
                 )
         else:
             logging.error(
-                f"Couldn't find last price {ticker}. Error: {e}",
+                f"Couldn't find last price {ticker}",
                 exc_info=True,
             )
 
