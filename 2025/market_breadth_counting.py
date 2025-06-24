@@ -26,6 +26,7 @@ class StockData(Base):
 
     id = Column(Integer, primary_key=True)
     date = Column(Date, nullable=False)
+    ticker = Column(String, nullable=False, index=True)
     ma50 = Column(Float, nullable=True)
     ma50_above = Column(Boolean, nullable=True)
     ma100 = Column(Float, nullable=True)
