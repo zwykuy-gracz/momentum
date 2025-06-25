@@ -136,11 +136,13 @@ df = pd.DataFrame(
     columns=["Date", "Ticker", "YTD", "Previous_correction", "Last_correction"],
 )
 df["Date"] = pd.to_datetime(df["Date"]).dt.date
-df = df.dropna()
 
 df_ytd = df[["Date", "Ticker", "YTD"]]
+df_ytd = df_ytd.dropna()
 df_previous_correction = df[["Date", "Ticker", "Previous_correction"]]
+df_previous_correction = df_previous_correction.dropna()
 df_last_correction = df[["Date", "Ticker", "Last_correction"]]
+df_last_correction = df_last_correction.dropna()
 
 df_ytd_sorted = df_ytd.sort_values(by="YTD", ascending=False)
 df_previous_correction_sorted = df_previous_correction.sort_values(
