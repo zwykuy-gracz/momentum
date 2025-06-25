@@ -45,14 +45,14 @@ class TickersList2B(Base):
     id = Column(Integer, primary_key=True)
     ticker = Column(String, nullable=False, index=True)
     market_cap = Column(Float, nullable=False)
-    nasdaq_tickers = Column(Boolean, nullable=False)
-    nyse_tickers = Column(Boolean, nullable=False)
+    nasdaq_tickers = Column(String, nullable=False)
+    nyse_tickers = Column(String, nullable=False)
 
     def __repr__(self):
-        return f"<StockPrice(ticker='{self.ticker}')>"
+        return f"<TickersList2B(ticker='{self.ticker}'),(nasdaq='{self.nasdaq_tickers}'),(nyse='{self.nyse_tickers}')>"
 
 
-engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
+engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))  # prod
 # Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -112,8 +112,8 @@ def populate_lt_5B(lt_5B):
     for ticker in lt_5B:
         stock_price = TickersList5B(
             ticker=ticker.ticker,
-            nasdaq_tickers=ticker.nasdaq_tickers,
-            nyse_tickers=ticker.nyse_tickers,
+            nasdaq_tickers=True if ticker.nasdaq_tickers == "1" else False,
+            nyse_tickers=True if ticker.nyse_tickers == "1" else False,
         )
         session.add(stock_price)
     logging.info("Tickers with market_cap > 5B populated")
