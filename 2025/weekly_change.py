@@ -173,8 +173,8 @@ df = df.dropna()
 
 df_weekly_sorted = df.sort_values(by="Weekly_change", ascending=False)
 
-weekly_top20 = df_weekly_sorted.head(20)
-weekly_worst20 = df_weekly_sorted.tail(20)
+weekly_top20 = df_weekly_sorted.head(50)
+weekly_worst20 = df_weekly_sorted.tail(50)
 weekly_worst20 = weekly_worst20.sort_values(by="Weekly_change", ascending=True)
 
 for _, row in weekly_top20.iterrows():
