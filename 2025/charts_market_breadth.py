@@ -74,25 +74,30 @@ x = lst_dates
 y1 = lst50
 y2 = lst100
 y3 = lst200
-fig, ax = plt.subplots(figsize=(12, 8))
 
-ax.plot(x, y1, linewidth=2.0, label="ma50")
-ax.plot(x, y2, linewidth=2.0, label="ma100")
-ax.plot(x, y3, linewidth=2.0, label="ma200")
+try:
+    fig, ax = plt.subplots(figsize=(12, 8))
 
-ax.set_xticks(x[::5])
-plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
-ax.grid(True, linestyle="--", alpha=0.7)
+    ax.plot(x, y1, linewidth=2.0, label="ma50")
+    ax.plot(x, y2, linewidth=2.0, label="ma100")
+    ax.plot(x, y3, linewidth=2.0, label="ma200")
 
-ax.legend()
-plt.title("Market Breadth")
-plt.ylabel("percentage of stocks above MA")
-previous_day = date.today() - timedelta(days=1)
-plt.savefig(
-    f"{os.getenv('MARKET_BREADTH_SCREENS_FOLDER')}/{str(previous_day).replace('-', '')}.png"
-)
+    ax.set_xticks(x[::15])
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
+    ax.grid(True, linestyle="--", alpha=0.7)
 
-logging.info("Chart created successfully.")
+    ax.legend()
+    plt.title("Market Breadth")
+    plt.ylabel("percentage of stocks above MA")
+    previous_day = date.today() - timedelta(days=1)
+    plt.savefig(
+        f"{os.getenv('MARKET_BREADTH_SCREENS_FOLDER')}/{str(previous_day).replace('-', '')}.png"
+    )
+
+    logging.info("Chart created successfully.")
+except Exception as e:
+    logging.info(f"Chart went wrong. Error: {e}")
+
 
 logging.info("10 seconds sleep before counting YTD Corrections")
 time.sleep(10)
