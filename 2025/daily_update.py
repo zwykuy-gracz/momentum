@@ -20,6 +20,17 @@ import os
 import time
 from dotenv import load_dotenv
 
+from utils import (
+    previous_day,
+    YTD_DATE,
+    LAST_CORRECTION_DATE,
+    list_of_tickers_2B,
+    list_of_tickers_5B,
+    list_of_tickers_nasdaq,
+    list_of_tickers_nyse,
+)
+
+
 load_dotenv()
 
 logging.basicConfig(
@@ -28,10 +39,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
-# copied
-YTD_DATE = date(2025, 1, 2)
-PREVIOUS_CORRECTION_DATE = date(2024, 11, 5)
-LAST_CORRECTION_DATE = date(2025, 4, 7)
 
 """
 DAILY BOT's Check LIST
@@ -73,19 +80,6 @@ class StockData(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.close})>"
 
 
-# copied
-class TickersList2B(Base):
-    __tablename__ = "list_of_tickers_lt_2B"
-
-    id = Column(Integer, primary_key=True)
-    ticker = Column(String, nullable=False, index=True)
-    nasdaq_tickers = Column(Boolean, nullable=False)
-    nyse_tickers = Column(Boolean, nullable=False)
-
-    def __repr__(self):
-        return f"<StockPrice(ticker='{self.ticker}')>"
-
-
 # copied but still needed here
 class TickersList5B(Base):
     __tablename__ = "list_of_tickers_lt_5B"
@@ -97,47 +91,6 @@ class TickersList5B(Base):
 
     def __repr__(self):
         return f"<StockPrice(ticker='{self.ticker}')>"
-
-
-# copied
-def creating_list_of_tickers_2B():
-    list_of_tickers = [t.ticker for t in session.query(TickersList2B).all()]
-    list_of_indexes = [
-        "QQQ",
-        "SPY",
-        "DIA",
-        "IWM",
-        "DAX",
-        "EWQ",
-        "EWU",
-        "EWC",
-        "EWZ",
-        "ARGT",
-        "EWW",
-        "EWA",
-        "MCHI",
-        "KWEB",
-        "EWJ",
-        "EPI",
-        "EWY",
-        "EWT",
-        "EWH",
-        "EWS",
-    ]
-    list_of_commodities = ["GLD", "SLV", "COPX", "USO"]
-    list_of_tickers.extend(list_of_indexes)
-    list_of_tickers.extend(list_of_commodities)
-    logging.info(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
-    print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
-    return list_of_tickers
-
-
-# copied but still needed here
-def creating_list_of_tickers_5B():
-    list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
-    logging.info(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
-    print(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
-    return list_of_tickers
 
 
 # downloads from YF and write DFs to files
@@ -347,16 +300,10 @@ def counting_and_populating_ytd_corrections_return(tickers, last_date):
     print("ytd_corrections_return counted")
 
 
-def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
+def nasdaq_counting_and_populating_DB_with_SMAs(last_date, nasdaq_list_of_tickers):
     logging.info("Nasdaq SMAa calculations started.")
     nasdaq_ta_symbols = []
     nasdaq_string_ticker = "NASDAQ:"
-    nasdaq_list_of_tickers = [
-        t.ticker
-        for t in session.query(TickersList5B)
-        .filter(TickersList5B.nasdaq_tickers == True)
-        .all()
-    ]
 
     for ticker in nasdaq_list_of_tickers:
         nasdaq_ta_symbols.append(nasdaq_string_ticker + ticker)
@@ -384,16 +331,10 @@ def nasdaq_counting_and_populating_DB_with_SMAs(last_date):
     print("Nasdaq SMAa populated")
 
 
-def nyse_counting_and_populating_DB_with_SMAs(last_date):
+def nyse_counting_and_populating_DB_with_SMAs(last_date, nyse_list_of_tickers):
     logging.info("Nyse SMAa calculations started.")
     nyse_ta_symbols = []
     nyse_string_ticker = "NYSE:"
-    nyse_list_of_tickers = [
-        t.ticker
-        for t in session.query(TickersList5B)
-        .filter(TickersList5B.nyse_tickers == True)
-        .all()
-    ]
 
     for ticker in nyse_list_of_tickers:
         nyse_ta_symbols.append(nyse_string_ticker + ticker)
@@ -489,12 +430,11 @@ def check_above_below_sma(tickers, last_date):
 def main():
     try:
         # copied
-        previous_day = date.today() - timedelta(days=1)
         print(f"Working on date: {previous_day}")
         logging.info(f"Working on date: {previous_day}")
         # copied
-        list_of_tickers_2B = creating_list_of_tickers_2B()
-        list_of_tickers_5B = creating_list_of_tickers_5B()
+        # list_of_tickers_2B = creating_list_of_tickers_2B()
+        # list_of_tickers_5B = creating_list_of_tickers_5B()
 
         download_tickers_from_yf(list_of_tickers_2B, previous_day)
         read_df_from_csv_and_populate_db(previous_day)
@@ -504,8 +444,12 @@ def main():
                 list_of_tickers_5B, previous_day
             )
 
-            nasdaq_counting_and_populating_DB_with_SMAs(previous_day)
-            nyse_counting_and_populating_DB_with_SMAs(previous_day)
+            nasdaq_counting_and_populating_DB_with_SMAs(
+                previous_day, list_of_tickers_nasdaq
+            )
+            nyse_counting_and_populating_DB_with_SMAs(
+                previous_day, list_of_tickers_nyse
+            )
 
             check_above_below_sma(list_of_tickers_5B, previous_day)
 
@@ -524,12 +468,12 @@ def main():
         logging.critical(f"Critical error in main process: {e}", exc_info=True)
 
 
-if __name__ == "__main__":
-    engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
-    # Base.metadata.create_all(engine)
+# if __name__ == "__main__":
+# engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
+# Base.metadata.create_all(engine)
 
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    main()
+# Session = sessionmaker(bind=engine)
+# session = Session()
+# main()
 
-    session.close()
+# session.close()

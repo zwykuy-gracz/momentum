@@ -18,7 +18,6 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-print(os.getenv("LOG_FILE"))
 
 # engine = create_engine(os.getenv("DB_ABSOLUTE_PATH")) # prod
 engine = create_engine(os.getenv("DB_STOCK_DATA"))  # dev
@@ -93,8 +92,30 @@ def creating_list_of_tickers_5B():
     return list_of_tickers
 
 
-# list_of_tickers_2B = creating_list_of_tickers_2B()
-# list_of_tickers_5B = creating_list_of_tickers_5B()
+def creating_list_of_tickers_nasdaq():
+    nasdaq_list_of_tickers = [
+        t.ticker
+        for t in session.query(TickersList5B)
+        .filter(TickersList5B.nasdaq_tickers == True)
+        .all()
+    ]
+    return nasdaq_list_of_tickers
+
+
+def creating_list_of_tickers_nyse():
+    nyse_list_of_tickers = [
+        t.ticker
+        for t in session.query(TickersList5B)
+        .filter(TickersList5B.nyse_tickers == True)
+        .all()
+    ]
+    return nyse_list_of_tickers
+
+
+list_of_tickers_2B = creating_list_of_tickers_2B()
+list_of_tickers_5B = creating_list_of_tickers_5B()
+list_of_tickers_nasdaq = creating_list_of_tickers_nasdaq()
+list_of_tickers_nyse = creating_list_of_tickers_nyse()
 
 session.close()
 # print(list_of_tickers_2B)

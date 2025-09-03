@@ -1,6 +1,6 @@
 import yfinance as yf
 import logging
 
-from utils import previous_day
+from utils import previous_day, YTD_DATE, LAST_CORRECTION_DATE
 
-print(previous_day)
+print(LAST_CORRECTION_DATE)
