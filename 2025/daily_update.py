@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import yfinance as yf
 import logging
 import runpy
@@ -29,6 +28,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
+# copied
 YTD_DATE = date(2025, 1, 2)
 PREVIOUS_CORRECTION_DATE = date(2024, 11, 5)
 LAST_CORRECTION_DATE = date(2025, 4, 7)
@@ -73,6 +73,7 @@ class StockData(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.close})>"
 
 
+# copied
 class TickersList2B(Base):
     __tablename__ = "list_of_tickers_lt_2B"
 
@@ -85,6 +86,7 @@ class TickersList2B(Base):
         return f"<StockPrice(ticker='{self.ticker}')>"
 
 
+# copied but still needed here
 class TickersList5B(Base):
     __tablename__ = "list_of_tickers_lt_5B"
 
@@ -97,6 +99,7 @@ class TickersList5B(Base):
         return f"<StockPrice(ticker='{self.ticker}')>"
 
 
+# copied
 def creating_list_of_tickers_2B():
     list_of_tickers = [t.ticker for t in session.query(TickersList2B).all()]
     list_of_indexes = [
@@ -129,6 +132,7 @@ def creating_list_of_tickers_2B():
     return list_of_tickers
 
 
+# copied but still needed here
 def creating_list_of_tickers_5B():
     list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
     logging.info(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
@@ -484,9 +488,11 @@ def check_above_below_sma(tickers, last_date):
 
 def main():
     try:
+        # copied
         previous_day = date.today() - timedelta(days=1)
         print(f"Working on date: {previous_day}")
         logging.info(f"Working on date: {previous_day}")
+        # copied
         list_of_tickers_2B = creating_list_of_tickers_2B()
         list_of_tickers_5B = creating_list_of_tickers_5B()
 
