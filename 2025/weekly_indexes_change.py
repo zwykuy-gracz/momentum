@@ -3,10 +3,10 @@ from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy import Float, Date
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.sql import and_
-import os
 import pandas as pd
-import logging
+import logging, os
 from dotenv import load_dotenv
+from utils import list_of_indexes, list_of_commodities
 
 load_dotenv()
 
@@ -155,30 +155,6 @@ previous_friday = date.today() - timedelta(days=8)
 four_weeks_ago_friday = date.today() - timedelta(days=29)
 print(last_friday)
 print(four_weeks_ago_friday)
-
-list_of_indexes = [
-    "QQQ",
-    "SPY",
-    "DIA",
-    "IWM",
-    "DAX",
-    "EWQ",
-    "EWU",
-    "EWC",
-    "EWZ",
-    "ARGT",
-    "EWW",
-    "EWA",
-    "MCHI",
-    "KWEB",
-    "EWJ",
-    "EPI",
-    "EWY",
-    "EWT",
-    "EWH",
-    "EWS",
-]
-list_of_commodities = ["GLD", "SLV", "COPX", "USO"]
 
 
 # ------INDEXES----------

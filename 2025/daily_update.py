@@ -1,7 +1,8 @@
 import pandas as pd
-import yfinance as yf
 import logging
 import runpy
+import os
+import time
 from datetime import date, timedelta
 from sqlalchemy import (
     create_engine,
@@ -16,8 +17,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import sessionmaker, declarative_base
 from tradingview_ta import TA_Handler, Interval, get_multiple_analysis
 from sqlalchemy.sql import and_
-import os
-import time
 from dotenv import load_dotenv
 
 from utils import (
@@ -50,6 +49,12 @@ Count and populate DB with YTD returns counting_and_populating_ytd_return(ticker
 Create Top20 YTD creating_df_best_ytd(last_date)
 """
 
+
+engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
+# Base.metadata.create_all(engine)
+
+Session = sessionmaker(bind=engine)
+session = Session()
 
 Base = declarative_base()
 
@@ -307,11 +312,8 @@ def check_above_below_sma(tickers, last_date):
     print("Above/below SMAs counted")
 
 
-def main():
+def functions_sequence():
     try:
-        print(f"Working on date: {previous_day}")
-        logging.info(f"Working on date: {previous_day}")
-
         number_of_new_records_in_DB = daily_count_new_records(previous_day)
         if number_of_new_records_in_DB > 0:
             counting_and_populating_ytd_corrections_return(
@@ -342,12 +344,6 @@ def main():
         logging.critical(f"Critical error in main process: {e}", exc_info=True)
 
 
-if __name__ == "__main__":
-    engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
-    # Base.metadata.create_all(engine)
+functions_sequence()
 
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    main()
-
-    session.close()
+session.close()

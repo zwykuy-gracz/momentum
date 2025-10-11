@@ -1,5 +1,5 @@
 import yfinance as yf
-import logging, time, os
+import logging, time, os, runpy
 import pandas as pd
 from datetime import date
 from utils import previous_day, list_of_tickers_2B
@@ -15,12 +15,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
-# engine = create_engine(os.getenv("DB_ABSOLUTE_PATH")) # prod
-engine = create_engine(os.getenv("DB_STOCK_DATA"))  # dev
-# Base.metadata.create_all(engine)
-
-Session = sessionmaker(bind=engine)
-session = Session()
 
 Base = declarative_base()
 
@@ -144,5 +138,36 @@ def read_df_from_csv_and_populate_db(last_date):
         logging.error(f"Database population failed: {e}", exc_info=True)
 
 
-# download_tickers_from_yf(list_of_tickers_2B, previous_day)
-# read_df_from_csv_and_populate_db(previous_day)
+def main():
+    try:
+        print(f"Working on date: {previous_day}")
+        logging.info(f"Working on date: {previous_day}")
+
+        download_tickers_from_yf(list_of_tickers_2B, previous_day)
+        read_df_from_csv_and_populate_db(previous_day)
+
+        logging.info("5 seconds sleep before daily update")
+        time.sleep(5)
+        try:
+            runpy.run_path(path_name=os.getenv("DAILY_UPDATE_PATH"))
+        except Exception as e:
+            logging.error(
+                f"Error in reaching DAILY_UPDATE_PATH script: {e}", exc_info=True
+            )
+
+    except Exception as e:
+        logging.critical(f"Critical error in main process: {e}", exc_info=True)
+
+
+if __name__ == "__main__":
+    engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))  # prod
+    # engine = create_engine(os.getenv("DB_STOCK_DATA"))  # dev
+    # Base.metadata.create_all(engine)
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    main()
+
+    session.close()
+
+# TODO: Call it and merge with daily_update
