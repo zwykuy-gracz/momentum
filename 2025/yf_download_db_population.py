@@ -170,4 +170,6 @@ if __name__ == "__main__":
 
     session.close()
 
-# TODO: Call it and merge with daily_update
+# TODO: correct crontab to make this a main file
+# weekly_update so it updates 2B in DB as well
+# irenka?...
