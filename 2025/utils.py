@@ -53,31 +53,8 @@ class TickersList5B(Base):
         return f"<StockPrice(ticker='{self.ticker}')>"
 
 
-def creating_list_of_tickers_2B():
+def creating_list_of_tickers_2B(list_of_indexes, list_of_commodities):
     list_of_tickers = [t.ticker for t in session.query(TickersList2B).all()]
-    list_of_indexes = [
-        "QQQ",
-        "SPY",
-        "DIA",
-        "IWM",
-        "DAX",
-        "EWQ",
-        "EWU",
-        "EWC",
-        "EWZ",
-        "ARGT",
-        "EWW",
-        "EWA",
-        "MCHI",
-        "KWEB",
-        "EWJ",
-        "EPI",
-        "EWY",
-        "EWT",
-        "EWH",
-        "EWS",
-    ]
-    list_of_commodities = ["GLD", "SLV", "COPX", "USO"]
     list_of_tickers.extend(list_of_indexes)
     list_of_tickers.extend(list_of_commodities)
     logging.info(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
@@ -112,7 +89,31 @@ def creating_list_of_tickers_nyse():
     return nyse_list_of_tickers
 
 
-list_of_tickers_2B = creating_list_of_tickers_2B()
+list_of_indexes = [
+    "QQQ",
+    "SPY",
+    "DIA",
+    "IWM",
+    "DAX",
+    "EWQ",
+    "EWU",
+    "EWC",
+    "EWZ",
+    "ARGT",
+    "EWW",
+    "EWA",
+    "MCHI",
+    "KWEB",
+    "EWJ",
+    "EPI",
+    "EWY",
+    "EWT",
+    "EWH",
+    "EWS",
+]
+list_of_commodities = ["GLD", "SLV", "COPX", "USO"]
+
+list_of_tickers_2B = creating_list_of_tickers_2B(list_of_indexes, list_of_commodities)
 list_of_tickers_5B = creating_list_of_tickers_5B()
 list_of_tickers_nasdaq = creating_list_of_tickers_nasdaq()
 list_of_tickers_nyse = creating_list_of_tickers_nyse()
