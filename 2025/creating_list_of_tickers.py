@@ -66,12 +66,15 @@ Populating DB with tickers step by step
 
 # 1. Create DF with tickers and Market Cap
 def create_tickers_file(filename):
-    df_csv = pd.read_csv(filename)
-    df = df_csv.dropna(subset=["Market Cap"], inplace=False)
-    df_two_bills = df[df["Market Cap"] >= 2_000_000_000]
-    df_ticker_MC = df_two_bills[["Symbol", "Market Cap"]]
-    print("Step 1 done")
-    return df_ticker_MC
+    try:
+        df_csv = pd.read_csv(filename)
+        df = df_csv.dropna(subset=["Market Cap"], inplace=False)
+        df_two_bills = df[df["Market Cap"] >= 2_000_000_000]
+        df_ticker_MC = df_two_bills[["Symbol", "Market Cap"]]
+        logging.info("Step 1. DF with tickers and Market Cap created")
+        return df_ticker_MC
+    except Exception as e:
+        logging.error(f"Step1 Error {e}")
 
 
 # 2. Delete all records from table list_of_tickers_lt_2B

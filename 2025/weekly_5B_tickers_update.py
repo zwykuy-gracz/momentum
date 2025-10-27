@@ -77,6 +77,7 @@ def create_df_lt_2B(filename):
         logging.error(f"Step1 Error {e}")
 
 
+# DELETE
 # Step 2: Update market_cap in table list_of_tickers_lt_2B
 def update_market_cap(df):
     for _, row in df.iterrows():
