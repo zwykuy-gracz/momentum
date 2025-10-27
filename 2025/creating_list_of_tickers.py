@@ -2,12 +2,17 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, Date
 from sqlalchemy import Boolean, Table, MetaData
 from sqlalchemy.orm import sessionmaker, declarative_base
 import pandas as pd
-import os
+import os, logging
 from sqlalchemy import and_
 from dotenv import load_dotenv
 
 load_dotenv()
 
+logging.basicConfig(
+    filename=os.getenv("LOG_FILE"),
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 
 Base = declarative_base()
 # metadata = MetaData()
@@ -42,8 +47,8 @@ class StockData(Base):
         return f"<StockData(ticker='{self.ticker}', date='{self.date}', close={self.close})>"
 
 
-engine = create_engine(os.getenv("DB_STOCK_DATA"))
-# engine = create_engine(os.getenv("DB_ABSOLUTE_PATH")) # prod
+# engine = create_engine(os.getenv("DB_STOCK_DATA")) # dev
+engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))  # prod
 # Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -92,7 +97,7 @@ def populate_db_with_tickers_MC(df):
     print("Step 3 done")
 
 
-# df_2B = create_tickers_file("nasdaq_screener_1750658312820.csv")
+# df_2B = create_tickers_file("nasdaq_screener_1760154670851.csv")
 # delete_list_of_tickers_lt_2B()
 # populate_db_with_tickers_MC(df_2B)
 
@@ -108,8 +113,8 @@ for ticker in list(df_nyse["Symbol"]):
     session.query(TickersList2B).filter(TickersList2B.ticker == ticker).update(
         {"nyse_tickers": True}
     )
-# session.commit()
-print("Step 4 done")
+session.commit()
+# print("Step 4 done")
 
 # 5. Delete tickers that are not Nasdaq or Nyse
 results = (
@@ -119,5 +124,5 @@ results = (
     )
     .delete()
 )
-# session.commit()
-print("Step 5 done")
+session.commit()
+# print("Step 5 done")

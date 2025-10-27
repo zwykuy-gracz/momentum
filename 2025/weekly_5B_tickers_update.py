@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean
 from sqlalchemy.orm import sessionmaker, declarative_base
-import os
-import logging
+import os, logging
 import pandas as pd
 from dotenv import load_dotenv
 
@@ -20,7 +19,7 @@ Base = declarative_base()
 WORKFLOW:
 0. Download data for all Nasdaq and Nyse tickers from https://www.nasdaq.com/market-activity/stocks/screener
 1. Create DF with tickers and Market 
-2. Update market_cap in table list_of_tickers_lt_1B
+2. Update market_cap in table list_of_tickers_lt_2B
 3. Select tickers with market_cap > 5B
 4. Delete all records from table list_of_tickers_lt_5B
 5. Populate table list_of_tickers_lt_5B with tickers with market_cap > 5B - copy from list_of_tickers_lt_1B
@@ -72,13 +71,13 @@ def create_df_lt_2B(filename):
         df = df_csv.dropna(subset=["Market Cap"], inplace=False)
         df_two_bills = df[df["Market Cap"] >= 2_000_000_000]
         df_ticker_MC = df_two_bills[["Symbol", "Market Cap"]]
-        logging.info("DF with tickers and Market Cap created")
+        logging.info("Step 1. DF with tickers and Market Cap created")
         return df_ticker_MC
     except Exception as e:
         logging.error(f"Step1 Error {e}")
 
 
-# Step 2: Update market_cap in table list_of_tickers_lt_1B
+# Step 2: Update market_cap in table list_of_tickers_lt_2B
 def update_market_cap(df):
     for _, row in df.iterrows():
         session.query(TickersList2B).filter_by(ticker=row["Symbol"]).update(
@@ -142,3 +141,14 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# TODO: merge with creating_list_of_tickers.py.
+"""
+Steps:
+create a new file and put it all together over there?
+clean up and organize creating_list_of... add logs, try-except, create functions
+delete step 2 from weekly_5B..
+query_db_length_after() - make it a 1 func. dinamic parameter before/after - passing a string
+merge with weekly_5B...
+2B reads from file. 5B reads from 2B table
+"""
