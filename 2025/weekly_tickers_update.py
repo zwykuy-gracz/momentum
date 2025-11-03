@@ -216,7 +216,7 @@ def main():
 
     logging.info("Working on lt2B table")
     # Step 2
-    df_2B = create_tickers_df_MC_lt2B_from_file("nasdaq_screener_1760154670851.csv")
+    df_2B = create_tickers_df_MC_lt2B_from_file("nasdaq_screener_1762043840322.csv")
     insert_tickers_lt2B(df_2B)
     # Step 4
     nasdaq_file = "nasdaq_lt_2B.csv"
