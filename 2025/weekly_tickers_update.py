@@ -107,7 +107,6 @@ def getting_file_name_with_all_tickers():
         list_files = os.listdir(os.getenv("WEEKLY_TICKERS_UPDATE_PATH"))
         for string in list_files:
             string_lenght.append(len(string))
-        # print(string_lenght.index(max(string_lenght)))
         logging.info(
             f"Step 2A done. Longest file name is: {list_files[string_lenght.index(max(string_lenght))]}"
         )
@@ -119,7 +118,8 @@ def getting_file_name_with_all_tickers():
 # 2B. Create DF from a file with tickers with Market Cap > $2B
 def create_tickers_df_MC_lt2B_from_file(filename):
     try:
-        df_csv = pd.read_csv(filename)
+        filename_uri = f"{os.getenv('WEEKLY_TICKERS_UPDATE_PATH')}/{filename}"
+        df_csv = pd.read_csv(filename_uri)
         df = df_csv.dropna(subset=["Market Cap"], inplace=False)
         df_two_bills = df[df["Market Cap"] >= 2_000_000_000]
         df_ticker_MC = df_two_bills[["Symbol", "Market Cap"]]
