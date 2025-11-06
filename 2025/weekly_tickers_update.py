@@ -97,20 +97,36 @@ def delete_tickers_from_lt2B_and_lt5B():
         session.commit()
         logging.info("Step 1 done. All records from lt_2B & lt_5B deleted")
     except Exception as e:
-        logging.error(f"Step2 Error {e}")
+        logging.error(f"Step1 Error {e}")
 
 
-# 2. Create DF from a file with tickers with Market Cap > $2B
+# 2A. Getting the name of file with all tickers
+def getting_file_name_with_all_tickers():
+    string_lenght = []
+    try:
+        list_files = os.listdir(os.getenv("WEEKLY_TICKERS_UPDATE_PATH"))
+        for string in list_files:
+            string_lenght.append(len(string))
+        # print(string_lenght.index(max(string_lenght)))
+        logging.info(
+            f"Step 2A done. Longest file name is: {list_files[string_lenght.index(max(string_lenght))]}"
+        )
+        return list_files[string_lenght.index(max(string_lenght))]
+    except Exception as e:
+        logging.error(f"Step 2A Error: {e}")
+
+
+# 2B. Create DF from a file with tickers with Market Cap > $2B
 def create_tickers_df_MC_lt2B_from_file(filename):
     try:
         df_csv = pd.read_csv(filename)
         df = df_csv.dropna(subset=["Market Cap"], inplace=False)
         df_two_bills = df[df["Market Cap"] >= 2_000_000_000]
         df_ticker_MC = df_two_bills[["Symbol", "Market Cap"]]
-        logging.info("Step 2 done. DF with tickers and Market Cap created")
+        logging.info("Step 2B done. DF with tickers and Market Cap created")
         return df_ticker_MC
     except Exception as e:
-        logging.error(f"Step1 Error: {e}")
+        logging.error(f"Step 2B Error: {e}")
 
 
 # 3. Populate DB with tickers and Market Cap. Set nasdaq_tickers and nyse_tickers to False
@@ -216,12 +232,13 @@ def main():
 
     logging.info("Working on lt2B table")
     # Step 2
-    df_2B = create_tickers_df_MC_lt2B_from_file("nasdaq_screener_1762043840322.csv")
+    all_tickers_file = getting_file_name_with_all_tickers()
+    df_2B = create_tickers_df_MC_lt2B_from_file(all_tickers_file)
     insert_tickers_lt2B(df_2B)
     # Step 4
-    nasdaq_file = "nasdaq_lt_2B.csv"
-    nyse_file = "nyse_lt_2B.csv"
-    update_lt2B_nasdaq_or_nyse(nasdaq_file, nyse_file)
+    nasdaq_file_uri = f"{os.getenv('WEEKLY_TICKERS_UPDATE_PATH')}/nasdaq_lt_2B.csv"
+    nyse_file_uri = f"{os.getenv('WEEKLY_TICKERS_UPDATE_PATH')}/nyse_lt_2B.csv"
+    update_lt2B_nasdaq_or_nyse(nasdaq_file_uri, nyse_file_uri)
     delete_not_nasdaq_nor_nyse()
 
     logging.info("Working on lt5B table")
