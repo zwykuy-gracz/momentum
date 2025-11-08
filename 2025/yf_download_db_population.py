@@ -145,6 +145,7 @@ def main():
 
         download_tickers_from_yf(list_of_tickers_2B, previous_day)
         read_df_from_csv_and_populate_db(previous_day)
+        session.close()
 
         logging.info("5 seconds sleep before daily update")
         time.sleep(5)
@@ -167,9 +168,3 @@ if __name__ == "__main__":
     Session = sessionmaker(bind=engine)
     session = Session()
     main()
-
-    session.close()
-
-# TODO: correct crontab to make this a main file
-# weekly_update so it updates 2B in DB as well
-# irenka?...

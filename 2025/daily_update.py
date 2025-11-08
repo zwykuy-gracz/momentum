@@ -328,6 +328,7 @@ def functions_sequence():
             )
 
             check_above_below_sma(list_of_tickers_5B, previous_day)
+            session.close()
 
             logging.info("All steps completed successfully.")
 
@@ -345,5 +346,3 @@ def functions_sequence():
 
 
 functions_sequence()
-
-session.close()
