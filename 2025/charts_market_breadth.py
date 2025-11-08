@@ -1,8 +1,4 @@
-import os
-import time
-import runpy
-import logging
-from datetime import date, timedelta
+import os, time, runpy, logging
 from sqlalchemy import (
     create_engine,
     Column,
@@ -12,6 +8,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
+from utils import previous_day
 
 load_dotenv()
 
@@ -89,7 +86,6 @@ try:
     ax.legend()
     plt.title("Market Breadth")
     plt.ylabel("percentage of stocks above MA")
-    previous_day = date.today() - timedelta(days=1)
     plt.savefig(
         f"{os.getenv('MARKET_BREADTH_SCREENS_FOLDER')}/{str(previous_day).replace('-', '')}.png"
     )

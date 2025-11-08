@@ -1,10 +1,8 @@
 #!/usr/bin/python3
 from sqlalchemy import create_engine, Column, Integer, String, Float, Date
 from sqlalchemy.orm import sessionmaker, declarative_base
-import os
-import logging
-import logging
 from datetime import date, timedelta, datetime
+import logging, os
 
 from telegram import Update
 from telegram.ext import ContextTypes, Application, CommandHandler

@@ -1,12 +1,9 @@
-import logging
-from datetime import date, timedelta
+import logging, os, time, runpy
 from sqlalchemy import create_engine, Column, Integer, Float, Date, Boolean, String
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.sql import and_
-import os
-import time
-import runpy
 from dotenv import load_dotenv
+from utils import previous_day
 
 load_dotenv()
 
@@ -89,7 +86,6 @@ def get_change(above, number_of_tickers):
 
 
 list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
-previous_day = date.today() - timedelta(days=1)
 query_ma = (
     session.query(StockData)
     .filter(and_(StockData.ticker.in_(list_of_tickers), StockData.date == previous_day))

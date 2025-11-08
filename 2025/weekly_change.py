@@ -2,10 +2,10 @@ from datetime import date, timedelta, datetime
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy import Float, Date, Boolean
 from sqlalchemy.orm import sessionmaker, declarative_base
-import os
 import pandas as pd
-import logging
+import logging, os
 from dotenv import load_dotenv
+from utils import previous_day, list_of_tickers_5B, list_of_indexes, list_of_commodities
 
 load_dotenv()
 
@@ -78,31 +78,7 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
-def creating_list_of_tickers():
-    list_of_tickers = [t.ticker for t in session.query(TickersList5B).all()]
-    list_of_indexes = [
-        "QQQ",
-        "SPY",
-        "DIA",
-        "IWM",
-        "DAX",
-        "EWQ",
-        "EWU",
-        "EWC",
-        "EWZ",
-        "ARGT",
-        "EWW",
-        "EWA",
-        "MCHI",
-        "KWEB",
-        "EWJ",
-        "EPI",
-        "EWY",
-        "EWT",
-        "EWH",
-        "EWS",
-    ]
-    list_of_commodities = ["GLD", "SLV", "COPX", "USO"]
+def creating_list_of_tickers(list_of_tickers, list_of_indexes, list_of_commodities):
     list_of_tickers.extend(list_of_indexes)
     list_of_tickers.extend(list_of_commodities)
     logging.info(f"Created list of tickers from DB with length: {len(list_of_tickers)}")
@@ -157,8 +133,9 @@ days_shift = {
 today = datetime.today().strftime("%A")
 last_friday = date.today() - timedelta(days=days_shift[today.lower()])
 
-previous_day = date.today() - timedelta(days=1)
-list_of_tickers = creating_list_of_tickers()
+list_of_tickers = creating_list_of_tickers(
+    list_of_tickers_5B, list_of_indexes, list_of_commodities
+)
 weekly_change(list_of_tickers, previous_day, last_friday)
 
 query_result = (

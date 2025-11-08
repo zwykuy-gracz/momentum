@@ -1,10 +1,9 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, Date
 from sqlalchemy.orm import sessionmaker, declarative_base
-from datetime import date, timedelta, datetime
 import pandas as pd
-import os
-import logging
+import logging, os
 from dotenv import load_dotenv
+from utils import previous_day, PREVIOUS_CORRECTION_DATE, LAST_CORRECTION_DATE
 
 load_dotenv()
 
@@ -17,9 +16,6 @@ logging.basicConfig(
 logging.info(f"Starting Best/worst YTD, corrections DB populating")
 
 Base = declarative_base()
-
-PREVIOUS_CORRECTION_DATE = date(2024, 11, 5)
-LAST_CORRECTION_DATE = date(2025, 4, 7)
 
 
 class StockData(Base):
@@ -119,7 +115,6 @@ engine = create_engine(os.getenv("DB_ABSOLUTE_PATH"))
 Session = sessionmaker(bind=engine)
 session = Session()
 
-previous_day = date.today() - timedelta(days=1)
 query_result = (
     session.query(
         StockData.date,
@@ -231,7 +226,6 @@ import runpy
 
 print("YTD finished - 5 seconds sleepipng")
 time.sleep(5)
-today = datetime.today().strftime("%A")
 try:
     runpy.run_path(path_name=os.getenv("WEEKLY_CHANGE_PATH"))
 except Exception as e:
