@@ -15,6 +15,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
+logging.info(f"Working on {previous_day}")
 
 Base = declarative_base()
 
